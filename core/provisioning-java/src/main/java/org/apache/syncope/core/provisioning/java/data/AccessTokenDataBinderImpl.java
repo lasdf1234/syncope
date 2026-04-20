@@ -127,6 +127,57 @@ public class AccessTokenDataBinderImpl implements AccessTokenDataBinder {
         return accessTokenDAO.save(accessToken);
     }
 
+    protected AccessTokenInfo generateJWT(
+            final String tokenId,
+            final String subject,
+            final OffsetDateTime expiration,
+            final Map<String, Object> claims) {
+
+        credentialChecker.checkIsDefaultJWSKeyInUse();
+
+        OffsetDateTime currentTime = OffsetDateTime.now();
+        Date issueTime = new Date(currentTime.toInstant().toEpochMilli());
+
+        JWTClaimsSet.Builder claimsSet = new JWTClaimsSet.Builder().
+                jwtID(tokenId).
+                subject(subject).
+                issuer(securityProperties.getJwtIssuer()).
+                issueTime(issueTime).
+                expirationTime(new Date(expiration.toInstant().toEpochMilli())).
+                notBeforeTime(issueTime);
+        claims.forEach(claimsSet::claim);
+
+        SignedJWT jwt = new SignedJWT(new JWSHeader(jwsSigner.getJwsAlgorithm()), claimsSet.build());
+        try {
+            jwt.sign(jwsSigner);
+        } catch (JOSEException e) {
+            SyncopeClientException sce = SyncopeClientException.build(ClientExceptionType.InvalidAccessToken);
+            sce.getElements().add(e.getMessage());
+            throw sce;
+        }
+        return new AccessTokenInfo(jwt.serialize(), expiration);
+    }
+
+    protected AccessToken replaceWithExpiration(
+            final String subject,
+            final Map<String, Object> claims,
+            final String authorities,
+            final AccessToken accessToken,
+            final OffsetDateTime expiration) {
+
+        AccessTokenInfo generated = generateJWT(accessToken.getKey(), subject, expiration, claims);
+
+        accessToken.setBody(generated.jwt());
+        accessToken.setExpirationTime(generated.expiration());
+        accessToken.setOwner(subject);
+
+        if (!securityProperties.getAdminUser().equals(accessToken.getOwner())) {
+            accessToken.setAuthorities(authorities);
+        }
+
+        return accessTokenDAO.save(accessToken);
+    }
+
     @Override
     public AccessTokenInfo create(
             final Optional<String> key,
@@ -152,6 +203,35 @@ public class AccessTokenDataBinderImpl implements AccessTokenDataBinder {
                     at.setKey(key.orElseGet(() -> SecureRandomUtils.generateRandomUUID().toString()));
 
                     return replace(subject, claims, authorities, at);
+                });
+
+        return new AccessTokenInfo(accessToken.getBody(), accessToken.getExpirationTime());
+    }
+
+    @Override
+    public AccessTokenInfo createWithExpiration(
+            final Optional<String> key,
+            final String subject,
+            final Map<String, Object> claims,
+            final String authorities,
+            final boolean replace,
+            final OffsetDateTime expiration) {
+
+        AccessToken accessToken = accessTokenDAO.findByOwner(subject).
+                map(at -> {
+                    if (replace
+                            || at.getExpirationTime() == null
+                            || at.getExpirationTime().isBefore(OffsetDateTime.now())) {
+
+                        return replaceWithExpiration(subject, claims, authorities, at, expiration);
+                    }
+                    return at;
+                }).
+                orElseGet(() -> {
+                    AccessToken at = entityFactory.newEntity(AccessToken.class);
+                    at.setKey(key.orElseGet(() -> SecureRandomUtils.generateRandomUUID().toString()));
+
+                    return replaceWithExpiration(subject, claims, authorities, at, expiration);
                 });
 
         return new AccessTokenInfo(accessToken.getBody(), accessToken.getExpirationTime());

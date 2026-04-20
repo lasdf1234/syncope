@@ -19,6 +19,7 @@
 package org.apache.syncope.core.logic;
 
 import java.lang.reflect.Method;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.syncope.common.lib.SyncopeClientException;
@@ -86,6 +87,23 @@ public class AccessTokenLogic extends AbstractTransactionalLogic<AccessTokenTO> 
                 Map.of(),
                 getAuthorities(),
                 false);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    public AccessTokenDataBinder.AccessTokenInfo token() {
+        if (securityProperties.getAnonymousUser().equals(AuthContextUtils.getUsername())) {
+            SyncopeClientException sce = SyncopeClientException.build(ClientExceptionType.InvalidRequest);
+            sce.getElements().add(securityProperties.getAnonymousUser() + " cannot be granted an access token");
+            throw sce;
+        }
+
+        return binder.createWithExpiration(
+                Optional.empty(),
+                AuthContextUtils.getUsername(),
+                Map.of(),
+                getAuthorities(),
+                false,
+                OffsetDateTime.now().plusYears(1));
     }
 
     @PreAuthorize("isAuthenticated()")

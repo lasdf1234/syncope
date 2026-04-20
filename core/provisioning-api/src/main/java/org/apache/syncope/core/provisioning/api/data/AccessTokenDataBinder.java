@@ -33,6 +33,14 @@ public interface AccessTokenDataBinder {
     AccessTokenInfo create(
             Optional<String> key, String subject, Map<String, Object> claims, String authorities, boolean replace);
 
+    AccessTokenInfo createWithExpiration(
+            Optional<String> key,
+            String subject,
+            Map<String, Object> claims,
+            String authorities,
+            boolean replace,
+            OffsetDateTime expiration);
+
     AccessTokenInfo update(AccessToken accessToken, String authorities);
 
     AccessTokenTO getAccessTokenTO(AccessToken accessToken);

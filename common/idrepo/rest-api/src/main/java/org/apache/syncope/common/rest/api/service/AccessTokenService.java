@@ -70,6 +70,28 @@ public interface AccessTokenService extends JAXRSService {
     Response login();
 
     /**
+     * Returns an empty response bearing the X-Syncope-Token header value, in case of successful authentication.
+     * The provided value is a signed JSON Web Token with one-year lifetime.
+     *
+     * @return empty response bearing the X-Syncope-Token header value, in case of successful authentication
+     */
+    @Operation(security = {
+        @SecurityRequirement(name = "BasicAuthentication") })
+    @ApiResponses({
+        @ApiResponse(responseCode = "204",
+                description = "JWT successfully generated", headers = {
+                    @Header(name = RESTHeaders.TOKEN, schema =
+                            @Schema(type = "string"), description = "Generated JWT"),
+                    @Header(name = RESTHeaders.TOKEN_EXPIRE, schema =
+                            @Schema(type = "string"), description = "Expiration of the generated JWT") }),
+        @ApiResponse(responseCode = "401", description = "Invalid username or password")
+    })
+    @POST
+    @Path("token")
+    @Produces({ MediaType.APPLICATION_JSON })
+    Response token();
+
+    /**
      * Returns an empty response bearing the X-Syncope-Token header value, with extended lifetime.
      * The provided value is a signed JSON Web Token.
      *
