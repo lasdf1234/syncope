@@ -23,8 +23,10 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.cxf.Bus;
 import org.apache.cxf.endpoint.Server;
+import org.apache.cxf.ext.logging.LoggingFeature;
 import org.apache.cxf.jaxrs.spring.JAXRSServerFactoryBeanDefinitionParser.SpringJAXRSServerFactoryBean;
 import org.apache.cxf.jaxrs.validation.JAXRSBeanValidationInInterceptor;
 import org.apache.cxf.transport.common.gzip.GZIPInInterceptor;
@@ -87,6 +89,7 @@ public class SCIMv2RESTCXFContext {
             final JacksonJsonProvider scimJacksonJsonProvider,
             final SCIMExceptionMapper scimExceptionMapper,
             final AddETagFilter scimAddETagFilter,
+            final Optional<LoggingFeature> loggingFeature,
             final Bus bus,
             final ApplicationContext ctx) {
 
@@ -105,6 +108,8 @@ public class SCIMv2RESTCXFContext {
         scimv2Container.setOutInterceptors(List.of(gzipOutInterceptor));
 
         scimv2Container.setProviders(List.of(scimJacksonJsonProvider, scimExceptionMapper, scimAddETagFilter));
+
+        loggingFeature.ifPresent(feature -> scimv2Container.setFeatures(List.of(feature)));
 
         scimv2Container.setApplicationContext(ctx);
         return scimv2Container.create();
