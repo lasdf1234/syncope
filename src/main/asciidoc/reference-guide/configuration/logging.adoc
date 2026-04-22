@@ -1,0 +1,71 @@
+//
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
+
+=== Request / response payload logging
+
+The `core.properties` file can be used to enable server-side CXF logging of inbound and outbound REST / SCIM payloads.
+
+.Request / response payload logging
+====
+[source,properties]
+----
+rest.logging.enabled=true
+rest.logging.pretty=true
+rest.logging.verbose=true
+rest.logging.limit=2147483647
+rest.logging.log-binary=false
+rest.logging.log-multipart=true
+----
+====
+
+When enabled, request and response payloads are written to `core-rest.log` according to the default Log4j2 routing.
+
+|===
+| Setting | Description | Recommended value
+
+| `rest.logging.enabled`
+| Master switch for request / response payload logging
+| `true`
+
+| `rest.logging.pretty`
+| Pretty-print JSON / XML in the logs for readability
+| `true`
+
+| `rest.logging.verbose`
+| Include more complete request / response details
+| `true`
+
+| `rest.logging.limit`
+| Maximum payload length to log
+| `2147483647`
+
+| `rest.logging.log-binary`
+| Whether to log binary content
+| `false`
+
+| `rest.logging.log-multipart`
+| Whether to log multipart content
+| `true`
+|===
+
+[NOTE]
+The deployment must be restarted after updating `core.properties`.
+
+[WARNING]
+Disable this feature when no longer needed because request / response payloads can contain sensitive data.

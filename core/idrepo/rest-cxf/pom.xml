@@ -78,6 +78,10 @@ under the License.
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-rt-rs-client</artifactId>
     </dependency> 
+    <dependency>
+      <groupId>org.apache.cxf</groupId>
+      <artifactId>cxf-rt-features-logging</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.apache.syncope.core.idrepo</groupId>

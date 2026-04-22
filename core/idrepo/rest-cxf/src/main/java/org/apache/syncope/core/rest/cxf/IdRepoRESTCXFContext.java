@@ -28,6 +28,8 @@ import java.util.Set;
 import org.apache.cxf.Bus;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.feature.Feature;
+import org.apache.cxf.ext.logging.LoggingFeature;
+import org.apache.cxf.ext.logging.slf4j.Slf4jVerboseEventSender;
 import org.apache.cxf.jaxrs.ext.ContextProvider;
 import org.apache.cxf.jaxrs.ext.search.SearchContext;
 import org.apache.cxf.jaxrs.ext.search.SearchContextImpl;
@@ -124,8 +126,10 @@ import org.apache.syncope.core.rest.cxf.service.UserServiceImpl;
 import org.apache.syncope.core.spring.task.VirtualThreadPoolTaskExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -266,6 +270,25 @@ public class IdRepoRESTCXFContext {
                 "Bearer", new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
 
         return openapiFeature;
+    }
+
+    @ConditionalOnMissingBean(name = "requestResponseLoggingFeature")
+    @ConditionalOnProperty(prefix = "rest.logging", name = "enabled", havingValue = "true")
+    @Bean
+    public LoggingFeature requestResponseLoggingFeature(final RESTProperties props) {
+        RESTProperties.LoggingProperties logging = props.getLogging();
+
+        Slf4jVerboseEventSender sender = new Slf4jVerboseEventSender();
+        sender.setLoggingLevel(Level.INFO);
+
+        LoggingFeature loggingFeature = new LoggingFeature();
+        loggingFeature.setSender(sender);
+        loggingFeature.setPrettyLogging(logging.isPretty());
+        loggingFeature.setVerbose(logging.isVerbose());
+        loggingFeature.setLimit(logging.getLimit());
+        loggingFeature.setLogBinary(logging.isLogBinary());
+        loggingFeature.setLogMultipart(logging.isLogMultipart());
+        return loggingFeature;
     }
 
     @ConditionalOnMissingBean

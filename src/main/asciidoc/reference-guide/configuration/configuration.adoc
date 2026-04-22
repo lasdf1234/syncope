@@ -44,6 +44,8 @@ was generated, the configuration files will be first searched in
 * `$SOURCE/sra/target/classes/`
 ****
 
+include::logging.adoc[]
+
 include::deployment.adoc[]
 
 include::dbms.adoc[]
