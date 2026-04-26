@@ -247,7 +247,7 @@ under the License.
         <filtering>true</filtering>
       </resource>
       <resource>
-        <directory>../core/persistence-jpa/src/test/resources/domains</directory>
+        <directory>../core/persistence-jpa/src/main/resources/domains</directory>
         <targetPath>core/domains</targetPath>
         <filtering>true</filtering>
       </resource>
