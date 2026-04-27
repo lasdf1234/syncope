@@ -110,10 +110,6 @@ public class OrphanCleanupInboundActions implements InboundActions {
         int deletedUsers = 0;
         if (resource.getProvisionByAnyType(AnyTypeKind.USER.name()).isPresent()) {
             for (var user : userDAO.findAll(Pageable.unpaged()).getContent()) {
-                if ("admin".equals(user.getUsername())) {
-                    LOG.debug("Skipping built-in admin user from orphan cleanup");
-                    continue;
-                }
                 if (!allUpstreamNames.contains(user.getUsername())) {
                     LOG.info("Deleting orphan user: username={}, key={}", user.getUsername(), user.getKey());
                     try {
