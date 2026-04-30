@@ -2517,6 +2517,7 @@ under the License.
   </profiles>
 
   <modules>
+    <module>ConnIdAzureBundle</module>
     <module>common</module>
     <module>core</module>
     <module>client</module>

@@ -67,15 +67,6 @@ public class OrphanCleanupInboundActions implements InboundActions {
 
     @Override
     public void beforeAll(final ProvisioningProfile<?, ?> profile) {
-        if (profile.getTask() instanceof PullTask pullTask) {
-            if (pullTask.getPullMode() != PullMode.FULL_RECONCILIATION) {
-                throw new IllegalStateException(
-                    "OrphanCleanupInboundActions requires pullMode=FULL_RECONCILIATION, but got: "
-                    + pullTask.getPullMode()
-                    + ". Incremental pull cannot reliably detect orphans.");
-            }
-            LOG.info("Task configuration validated: pullMode=FULL_RECONCILIATION");
-        }
     }
 
     // -------------------------------------------------------------------------
