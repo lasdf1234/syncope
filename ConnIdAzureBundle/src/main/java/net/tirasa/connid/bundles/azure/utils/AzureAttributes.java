@@ -64,6 +64,8 @@ public final class AzureAttributes {
 
     public static final String SUBSCRIBED_SKU_ID = "objectId";
 
+    public static final String APPLICATION_APP_ID = "appId";
+
     public static final List<String> GROUP_REQUIRED_ATTRS = new ArrayList<String>() {
 
         private static final long serialVersionUID = 3109256773218160485L;
