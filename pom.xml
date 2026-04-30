@@ -424,6 +424,11 @@ under the License.
     <connid.ad.version>1.4.0</connid.ad.version>
     <connid.googleapps.version>1.4.6</connid.googleapps.version>
     <connid.azure.version>3.0.0</connid.azure.version>
+    <connid.azure.bundle.jackson.annotations.version>2.21</connid.azure.bundle.jackson.annotations.version>
+    <connid.azure.bundle.jackson.core.version>2.21.2</connid.azure.bundle.jackson.core.version>
+    <connid.azure.bundle.jackson.databind.version>2.21.2</connid.azure.bundle.jackson.databind.version>
+    <connid.azure.bundle.jackson.datatype.version>2.21.2</connid.azure.bundle.jackson.datatype.version>
+    <connid.azure.bundle.jackson.directory>${project.build.directory}/azure-jackson</connid.azure.bundle.jackson.directory>
     <connid.scim.version>1.0.5</connid.scim.version>
     <connid.servicenow.version>1.0.4</connid.servicenow.version>
     <connid.okta.version>3.0.8</connid.okta.version>
@@ -1765,6 +1770,28 @@ under the License.
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
           <version>3.2.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.fasterxml.jackson.core</groupId>
+              <artifactId>jackson-annotations</artifactId>
+              <version>${connid.azure.bundle.jackson.annotations.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>com.fasterxml.jackson.core</groupId>
+              <artifactId>jackson-core</artifactId>
+              <version>${connid.azure.bundle.jackson.core.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>com.fasterxml.jackson.core</groupId>
+              <artifactId>jackson-databind</artifactId>
+              <version>${connid.azure.bundle.jackson.databind.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>com.fasterxml.jackson.datatype</groupId>
+              <artifactId>jackson-datatype-jsr310</artifactId>
+              <version>${connid.azure.bundle.jackson.datatype.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
 
         <plugin>

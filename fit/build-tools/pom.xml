@@ -200,6 +200,38 @@ under the License.
               <goal>copy</goal>
             </goals>
           </execution>
+          <execution>
+            <id>copy-azure-jackson</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${connid.azure.bundle.jackson.directory}</outputDirectory>
+              <artifactItems combine.self="override">
+                <artifactItem>
+                  <groupId>com.fasterxml.jackson.core</groupId>
+                  <artifactId>jackson-annotations</artifactId>
+                  <version>${connid.azure.bundle.jackson.annotations.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.fasterxml.jackson.core</groupId>
+                  <artifactId>jackson-core</artifactId>
+                  <version>${connid.azure.bundle.jackson.core.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.fasterxml.jackson.core</groupId>
+                  <artifactId>jackson-databind</artifactId>
+                  <version>${connid.azure.bundle.jackson.databind.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.fasterxml.jackson.datatype</groupId>
+                  <artifactId>jackson-datatype-jsr310</artifactId>
+                  <version>${connid.azure.bundle.jackson.datatype.version}</version>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
 
@@ -233,6 +265,47 @@ under the License.
                      modificationtime="${project.build.outputTimestamp}"/>                  
 
                 <delete dir="${bundles.directory}/soap"/>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>repack-azure-bundle-jackson</id>
+            <phase>prepare-package</phase>
+            <configuration>
+              <target>
+                <delete dir="${bundles.directory}/azure"/>
+                <mkdir dir="${bundles.directory}/azure"/>
+
+                <unzip src="${bundles.directory}/net.tirasa.connid.bundles.azure-${connid.azure.version}-bundle.jar"
+                       dest="${bundles.directory}/azure"/>
+
+                <delete file="${bundles.directory}/azure/lib/jackson-annotations-2.17.2.jar"/>
+                <delete file="${bundles.directory}/azure/lib/jackson-core-2.17.2.jar"/>
+                <delete file="${bundles.directory}/azure/lib/jackson-databind-2.18.1.jar"/>
+                <delete file="${bundles.directory}/azure/lib/jackson-datatype-jsr310-2.17.2.jar"/>
+
+                <copy file="${connid.azure.bundle.jackson.directory}/jackson-annotations-${connid.azure.bundle.jackson.annotations.version}.jar"
+                      todir="${bundles.directory}/azure/lib"
+                      overwrite="true"/>
+                <copy file="${connid.azure.bundle.jackson.directory}/jackson-core-${connid.azure.bundle.jackson.core.version}.jar"
+                      todir="${bundles.directory}/azure/lib"
+                      overwrite="true"/>
+                <copy file="${connid.azure.bundle.jackson.directory}/jackson-databind-${connid.azure.bundle.jackson.databind.version}.jar"
+                      todir="${bundles.directory}/azure/lib"
+                      overwrite="true"/>
+                <copy file="${connid.azure.bundle.jackson.directory}/jackson-datatype-jsr310-${connid.azure.bundle.jackson.datatype.version}.jar"
+                      todir="${bundles.directory}/azure/lib"
+                      overwrite="true"/>
+
+                <jar destfile="${bundles.directory}/net.tirasa.connid.bundles.azure-${connid.azure.version}-bundle.jar"
+                     basedir="${bundles.directory}/azure"
+                     filesetmanifest="merge"
+                     modificationtime="${project.build.outputTimestamp}"/>
+
+                <delete dir="${bundles.directory}/azure"/>
               </target>
             </configuration>
             <goals>
