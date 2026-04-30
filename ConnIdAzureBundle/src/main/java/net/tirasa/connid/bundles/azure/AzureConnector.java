@@ -1161,6 +1161,10 @@ public class AzureConnector implements
                     default:
                 }
             }
+            attrs.add(AzureAttributes.doBuildAttributeFromClassField(
+                    group.getMailNickname(), AzureAttributes.GROUP_MAIL_NICKNAME, String.class).build());
+            attrs.add(AzureAttributes.doBuildAttributeFromClassField(
+                    group.getDisplayName(), AzureAttributes.GROUP_DISPLAY_NAME, String.class).build());
             for (Attribute toAttribute : attrs) {
                 String attributeName = toAttribute.getName();
                 for (String attributeToGetName : attributesToGet) {
