@@ -398,23 +398,37 @@ This is useful for SCIM and REST request troubleshooting.
 
 ### 13.1 Real-time user and group push to Gravitino
 
-1. Create a new REST connector.
-2. Configure the Gravitino endpoint and scripts.
-3. Enable the required capabilities.
-4. Create a resource under the connector.
-5. Create a push task.
-6. Configure provisioning rules for both `USER` and `GROUP`.
-
-Reference screenshots:
+1. Click **Topology**, create a new connector, and select the REST connector.
 
 ![Create REST connector from topology](docs-images/scim-to-gravitino/image38.png)
+
+2. Configure the Gravitino endpoint and scripts.
+
 ![Configure REST connector endpoint and scripts](docs-images/scim-to-gravitino/image18.png)
 ![Configure REST connector details](docs-images/scim-to-gravitino/image9.png)
+
+3. Enable the required capabilities, then click **Finish**.
+
 ![Select connector capabilities](docs-images/scim-to-gravitino/image17.png)
+
+4. Create a resource under the connector and keep clicking **Next** until the end.
+
 ![Create resource under REST connector](docs-images/scim-to-gravitino/image32.png)
+
+5. Create a push task.
+
 ![Create push task](docs-images/scim-to-gravitino/image33.png)
+
+The push task configuration is as follows.
+
 ![Push task configuration](docs-images/scim-to-gravitino/image6.png)
+
+Click **Provision Rules**.
+
 ![Open provision rules](docs-images/scim-to-gravitino/image8.png)
+
+Configure mappings for both `USER` and `GROUP`.
+
 ![Configure USER and GROUP mappings](docs-images/scim-to-gravitino/image39.png)
 
 For `USER.username`, use this template:
@@ -430,7 +444,13 @@ value.replaceAll('([^@]+)@.*', '$1')
 Also configure Realm templates for both `USER` and `GROUP`.
 
 ![Realm template entry point](docs-images/scim-to-gravitino/image10.png)
+
+Set templates for both `USER` and `GROUP`.
+
 ![Realm template assignment](docs-images/scim-to-gravitino/image30.png)
+
+Make sure external resources include the task that was just configured.
+
 ![External resource selection](docs-images/scim-to-gravitino/image31.png)
 
 ### 13.2 Third-party platform push to Syncope
@@ -457,9 +477,6 @@ If an emergency occurs, suspend third-party provisioning first, then run the rec
 5. Set **Provisioning Status** to **Off**.
 6. Save.
 
-![Pause provisioning in Microsoft Entra](docs-images/scim-to-gravitino/image25.png)
-![Pause provisioning in Microsoft Entra example](docs-images/scim-to-gravitino/image30.png)
-
 ### 14.2 Register the orphan-cleanup inbound action
 
 ```bash
@@ -477,15 +494,28 @@ curl -k -u admin:password \
 
 ### 14.3 Configure the recovery pull task
 
-Create a dedicated Azure connector for recovery, then create a resource under that connector and open **Provision Rules**.
+![Configure the recovery pull task](docs-images/scim-to-gravitino/image25.png)
 
-![Create Azure connector for recovery](docs-images/scim-to-gravitino/image9.png)
-![Recovery connector basic settings](docs-images/scim-to-gravitino/image25.png)
-![Recovery connector additional settings](docs-images/scim-to-gravitino/image8.png)
-![Recovery connector final settings](docs-images/scim-to-gravitino/image16.png)
+Create a dedicated Azure connector for recovery.
 
-For both `USER` and `GROUP`, configure the recovery mappings and templates.  
+![Create Azure connector for recovery](docs-images/scim-to-gravitino/image3.png)
+![Recovery connector basic settings](docs-images/scim-to-gravitino/image24.png)
+![Recovery connector additional settings](docs-images/scim-to-gravitino/image1.png)
+![Recovery connector final settings](docs-images/scim-to-gravitino/image21.png)
+
+Create a resource under that connector, then open **Provision Rules**.
+
+![Create resource and open provision rules](docs-images/scim-to-gravitino/image4.png)
+
+For both `USER` and `GROUP`, configure the recovery mappings and templates.
+
+![Recovery USER and GROUP mapping configuration](docs-images/scim-to-gravitino/image29.png)
+![Recovery GROUP mapping example](docs-images/scim-to-gravitino/image44.png)
+![Recovery mapping details](docs-images/scim-to-gravitino/image37.png)
+
 Add a filtered reconciliation rule so that only objects for the target Azure application are included. Replace the following Azure client ID with your own:
+
+![Recovery filter builder configuration](docs-images/scim-to-gravitino/word123-image19.png)
 
 ```groovy
 import java.util.LinkedHashSet
@@ -517,21 +547,19 @@ class AppIdReconFilterBuilder implements ReconFilterBuilder {
 }
 ```
 
-Then create a new pull task and configure templates for both `USER` and `GROUP`.
+Create a new pull task.
 
-Recovery workflow screenshots:
+![Create pull task](docs-images/scim-to-gravitino/word123-image32.png)
+![Pull task configuration](docs-images/scim-to-gravitino/image23.png)
 
-![Create resource and open provision rules](docs-images/scim-to-gravitino/image21.png)
-![Recovery USER and GROUP mapping configuration](docs-images/scim-to-gravitino/image3.png)
-![Recovery USER mapping example](docs-images/scim-to-gravitino/image29.png)
-![Recovery GROUP mapping example](docs-images/scim-to-gravitino/image44.png)
-![Recovery mapping details](docs-images/scim-to-gravitino/image34.png)
-![Recovery filter builder configuration](docs-images/scim-to-gravitino/image19.png)
-![Create pull task](docs-images/scim-to-gravitino/image32.png)
-![Pull task configuration](docs-images/scim-to-gravitino/image18.png)
-![Open pull task template configuration](docs-images/scim-to-gravitino/image20.png)
-![Configure USER template](docs-images/scim-to-gravitino/image23.png)
-![Configure GROUP template](docs-images/scim-to-gravitino/image26.png)
+Click **Template**.
+
+![Open pull task template configuration](docs-images/scim-to-gravitino/image19.png)
+
+Configure templates for both `USER` and `GROUP`.
+
+![Configure USER template](docs-images/scim-to-gravitino/image27.png)
+![Configure GROUP template](docs-images/scim-to-gravitino/image12.png)
 
 This recovery pull setup should include:
 
@@ -546,12 +574,12 @@ This recovery pull setup should include:
 Copy the existing Gravitino resource used for push, then change `searchScriptFileName` to `ListSearchScript.groovy`.
 
 ![Copy the existing Gravitino resource](docs-images/scim-to-gravitino/image43.png)
-![Update searchScriptFileName to ListSearchScript.groovy](docs-images/scim-to-gravitino/image39.png)
+![Update searchScriptFileName to ListSearchScript.groovy](docs-images/scim-to-gravitino/word123-image39.png)
 
 After that, create the push task that will republish the recovered data from Syncope to Gravitino.
 
 ![Create the recovery push task](docs-images/scim-to-gravitino/image41.png)
-![Recovery push task configuration](docs-images/scim-to-gravitino/image37.png)
+![Recovery push task configuration](docs-images/scim-to-gravitino/word123-image37.png)
 
 ### 14.5 Recovery execution order
 
