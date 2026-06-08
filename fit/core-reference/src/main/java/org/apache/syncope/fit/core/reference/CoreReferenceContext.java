@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.env.Environment;
 
 @AutoConfigureBefore(IdRepoLogicContext.class)
 @ComponentScan("org.apache.syncope.fit.core.reference")
@@ -51,9 +52,10 @@ public class CoreReferenceContext {
     public ImplementationLookup implementationLookup(
             final DomainHolder<?> domainHolder,
             final UserWorkflowAdapter uwf,
-            final ObjectProvider<EnableFlowableForTestUsers> enableFlowableForTestUsers) {
+            final ObjectProvider<EnableFlowableForTestUsers> enableFlowableForTestUsers,
+            final Environment environment) {
 
-        return new ITImplementationLookup(domainHolder, uwf, enableFlowableForTestUsers);
+        return new ITImplementationLookup(domainHolder, uwf, enableFlowableForTestUsers, environment);
     }
 
     @Bean

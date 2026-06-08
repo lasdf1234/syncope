@@ -74,11 +74,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.env.Environment;
 
 /**
  * Static implementation providing information about the integration test environment.
  */
 public class ITImplementationLookup implements ImplementationLookup {
+
+    private static final String FLOWABLE_ENABLE_FOR_TEST_USERS = "fit.flowable.enableForTestUsers";
 
     private static final Map<Class<? extends ReportConf>, Class<? extends ReportJobDelegate>> REPORT_CLASSES =
             Map.of(SampleReportConf.class, SampleReportJobDelegate.class);
@@ -214,14 +217,18 @@ public class ITImplementationLookup implements ImplementationLookup {
 
     private final ObjectProvider<EnableFlowableForTestUsers> enableFlowableForTestUsers;
 
+    private final Environment environment;
+
     public ITImplementationLookup(
             final DomainHolder<?> domainHolder,
             final UserWorkflowAdapter uwf,
-            final ObjectProvider<EnableFlowableForTestUsers> enableFlowableForTestUsers) {
+            final ObjectProvider<EnableFlowableForTestUsers> enableFlowableForTestUsers,
+            final Environment environment) {
 
         this.domainHolder = domainHolder;
         this.uwf = uwf;
         this.enableFlowableForTestUsers = enableFlowableForTestUsers;
+        this.environment = environment;
     }
 
     @Override
@@ -233,6 +240,10 @@ public class ITImplementationLookup implements ImplementationLookup {
 
     @Override
     public void load(final String domain) {
+        if (!environment.getProperty(FLOWABLE_ENABLE_FOR_TEST_USERS, Boolean.class, false)) {
+            return;
+        }
+
         Object v = domainHolder.getDomains().get(domain);
 
         // in case the Flowable extension is enabled, enable modifications for test users
