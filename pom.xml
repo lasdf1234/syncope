@@ -417,7 +417,7 @@ under the License.
 
     <connid.version>1.6.1.0</connid.version>
     <connid.soap.version>1.5.0</connid.soap.version>
-    <connid.rest.version>1.1.1</connid.rest.version>
+    <connid.rest.version>1.1.1-SNAPSHOT</connid.rest.version>
     <connid.db.version>2.4.1</connid.db.version>
     <connid.csvdir.version>0.8.10</connid.csvdir.version>
     <connid.ldap.version>1.5.10</connid.ldap.version>
@@ -1458,6 +1458,14 @@ under the License.
         <groupId>net.tirasa.connid.bundles</groupId>
         <artifactId>net.tirasa.connid.bundles.azure</artifactId>
         <version>${connid.azure.version}</version>
+        <classifier>bundle</classifier>
+        <type>jar</type>
+      </dependency>
+
+      <dependency>
+        <groupId>net.tirasa.connid.bundles</groupId>
+        <artifactId>net.tirasa.connid.bundles.rest</artifactId>
+        <version>${connid.rest.version}</version>
         <classifier>bundle</classifier>
         <type>jar</type>
       </dependency>
@@ -2526,6 +2534,7 @@ under the License.
 
   <modules>
     <module>ConnIdAzureBundle</module>
+    <module>ConnIdRESTBundle</module>
     <module>common</module>
     <module>core</module>
     <module>client</module>

@@ -45,6 +45,13 @@ under the License.
       <type>jar</type>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>net.tirasa.connid.bundles</groupId>
+      <artifactId>net.tirasa.connid.bundles.rest</artifactId>
+      <classifier>bundle</classifier>
+      <type>jar</type>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.syncope.core</groupId>
