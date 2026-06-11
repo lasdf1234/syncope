@@ -466,6 +466,10 @@ public class AzureClient extends AzureService {
                 getMemberObjects().post(securityEnabled).getValue();
     }
 
+    public String resolveApplicationAppId(final AzureFilter filters) {
+        return getApplicationAssignmentAppId(filters, AzureUtils.getFilter(filters));
+    }
+
     private String getApplicationAssignmentAppId(final AzureFilter filters, final String filter) {
         if (filters != null && filters.getAttribute() != null && filters.getValue() != null) {
             String attributeName = filters.getAttribute().getName();

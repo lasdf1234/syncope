@@ -344,6 +344,10 @@ public class AzureConnector implements
             attributesToGet.addAll(Arrays.asList(options.getAttributesToGet()));
         }
 
+        final String applicationAppId = query == null
+                ? null
+                : client.getAuthenticated().resolveApplicationAppId(query);
+
         if (ObjectClass.ACCOUNT.equals(objectClass)) {
             if (key == null && moreFilters) {
                 List<User> users = null;
@@ -369,7 +373,7 @@ public class AzureConnector implements
                 }
 
                 if (users != null) {
-                    users.forEach(user -> handler.handle(fromUser(user, attributesToGet)));
+                    users.forEach(user -> handler.handle(fromUser(user, attributesToGet, applicationAppId)));
                 }
 
                 if (handler instanceof SearchResultsHandler) {
@@ -388,7 +392,7 @@ public class AzureConnector implements
                                 + key.getName() + " - " + AttributeUtil.getAsStringValue(key), e);
                     }
                     if (result != null) {
-                        handler.handle(fromUser(result, attributesToGet));
+                        handler.handle(fromUser(result, attributesToGet, applicationAppId));
                     }
                 } else {
                     List<User> result = null;
@@ -399,7 +403,7 @@ public class AzureConnector implements
                                 + key.getName() + " - " + AttributeUtil.getAsStringValue(key), e);
                     }
                     if (result != null) {
-                        result.forEach(user -> handler.handle(fromUser(user, attributesToGet)));
+                        result.forEach(user -> handler.handle(fromUser(user, attributesToGet, applicationAppId)));
                     }
                 }
             }
@@ -429,7 +433,7 @@ public class AzureConnector implements
                 }
 
                 if (groups != null) {
-                    groups.forEach(group -> handler.handle(fromGroup(group, attributesToGet)));
+                    groups.forEach(group -> handler.handle(fromGroup(group, attributesToGet, applicationAppId)));
                 }
 
                 if (handler instanceof SearchResultsHandler) {
@@ -446,7 +450,7 @@ public class AzureConnector implements
                         AzureUtils.wrapGeneralError("While getting Group!", e);
                     }
                     if (result != null) {
-                        handler.handle(fromGroup(result, attributesToGet));
+                        handler.handle(fromGroup(result, attributesToGet, applicationAppId));
                     }
                 } else {
                     List<Group> result = null;
@@ -457,7 +461,7 @@ public class AzureConnector implements
                                 + key.getName() + " - " + AttributeUtil.getAsStringValue(key), e);
                     }
                     if (result != null) {
-                        result.forEach(group -> handler.handle(fromGroup(group, attributesToGet)));
+                        result.forEach(group -> handler.handle(fromGroup(group, attributesToGet, applicationAppId)));
                     }
                 }
             }
@@ -860,7 +864,8 @@ public class AzureConnector implements
         return client;
     }
 
-    private ConnectorObject fromUser(final User user, final Set<String> attributesToGet) {
+    private ConnectorObject fromUser(
+            final User user, final Set<String> attributesToGet, final String applicationAppId) {
         ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
         builder.setObjectClass(ObjectClass.ACCOUNT);
         builder.setUid(user.getId());
@@ -1070,10 +1075,15 @@ public class AzureConnector implements
             builder.addAttribute(AttributeBuilder.build(PredefinedAttributes.GROUPS_NAME, groupNames));
         }
 
+        if (applicationAppId != null) {
+            builder.addAttribute(AttributeBuilder.build(AzureAttributes.APPLICATION_APP_ID, applicationAppId));
+        }
+
         return builder.build();
     }
 
-    private ConnectorObject fromGroup(final Group group, final Set<String> attributesToGet) {
+    private ConnectorObject fromGroup(
+            final Group group, final Set<String> attributesToGet, final String applicationAppId) {
         ConnectorObjectBuilder builder = new ConnectorObjectBuilder();
         builder.setObjectClass(ObjectClass.GROUP);
         builder.setUid(group.getId());
@@ -1187,6 +1197,10 @@ public class AzureConnector implements
                     stream().map(Group::getMailNickname).
                     collect(Collectors.toList());
             builder.addAttribute(AttributeBuilder.build(PredefinedAttributes.GROUPS_NAME, groupNames));
+        }
+
+        if (applicationAppId != null) {
+            builder.addAttribute(AttributeBuilder.build(AzureAttributes.APPLICATION_APP_ID, applicationAppId));
         }
 
         return builder.build();
