@@ -193,6 +193,8 @@ under the License.
                 <copy file="${project.build.outputDirectory}/context.xml" todir="${work.dir}/apache-tomcat-${tomcat.version}/conf" overwrite="true"/>
                 <copy file="${project.build.outputDirectory}/setenv.sh" todir="${work.dir}/apache-tomcat-${tomcat.version}/bin"/>
                 <copy file="${project.build.outputDirectory}/setenv.bat" todir="${work.dir}/apache-tomcat-${tomcat.version}/bin"/>
+                <copy file="${project.build.outputDirectory}/import-azure-truststore.sh" todir="${work.dir}/apache-tomcat-${tomcat.version}/bin"/>
+                <chmod file="${work.dir}/apache-tomcat-${tomcat.version}/bin/import-azure-truststore.sh" perm="ugo+rx"/>
                 <replace file="${work.dir}/apache-tomcat-${tomcat.version}/conf/server.xml" token="8080" value="${cargo.servlet.port}"/>
                 <replace file="${work.dir}/apache-tomcat-${tomcat.version}/conf/server.xml" token="8443" value="9443"/>
                 <replace file="${work.dir}/apache-tomcat-${tomcat.version}/conf/server.xml">
