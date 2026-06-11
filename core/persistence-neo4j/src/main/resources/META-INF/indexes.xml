@@ -23,6 +23,8 @@ under the License.
 
   <entry key="AccessToken_id">CREATE INDEX AccessToken_id FOR (n:AccessToken) ON (n.id)</entry>
   <entry key="AccessToken_owner">CREATE CONSTRAINT AccessToken_owner FOR (n:AccessToken) REQUIRE n.owner IS UNIQUE</entry>
+  <entry key="PersonalAccessToken_id">CREATE INDEX PersonalAccessToken_id FOR (n:PersonalAccessToken) ON (n.id)</entry>
+  <entry key="PersonalAccessToken_owner">CREATE INDEX PersonalAccessToken_owner FOR (n:PersonalAccessToken) ON (n.owner)</entry>
 
   <entry key="AuthProfile_owner">CREATE CONSTRAINT AuthProfile_owner FOR (n:AuthProfile) REQUIRE n.owner IS UNIQUE</entry>
 

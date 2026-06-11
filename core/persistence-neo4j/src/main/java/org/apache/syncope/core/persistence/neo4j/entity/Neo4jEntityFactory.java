@@ -20,6 +20,7 @@ package org.apache.syncope.core.persistence.neo4j.entity;
 
 import org.apache.syncope.core.persistence.api.dao.AnySearchDAO;
 import org.apache.syncope.core.persistence.api.entity.AccessToken;
+import org.apache.syncope.core.persistence.api.entity.PersonalAccessToken;
 import org.apache.syncope.core.persistence.api.entity.AnyAbout;
 import org.apache.syncope.core.persistence.api.entity.AnyTemplateRealm;
 import org.apache.syncope.core.persistence.api.entity.AnyType;
@@ -238,6 +239,8 @@ public class Neo4jEntityFactory implements EntityFactory {
             result = (E) new Neo4jAuditConf();
         } else if (reference.equals(AccessToken.class)) {
             result = (E) new Neo4jAccessToken();
+        } else if (reference.equals(PersonalAccessToken.class)) {
+            result = (E) new Neo4jPersonalAccessToken();
         } else if (reference.equals(Implementation.class)) {
             result = (E) new Neo4jImplementation();
         } else if (reference.equals(Remediation.class)) {

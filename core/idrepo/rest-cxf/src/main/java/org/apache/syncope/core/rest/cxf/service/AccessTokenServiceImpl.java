@@ -20,8 +20,11 @@ package org.apache.syncope.core.rest.cxf.service;
 
 import jakarta.ws.rs.core.Response;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import org.apache.syncope.common.lib.to.AccessTokenTO;
 import org.apache.syncope.common.lib.to.PagedResult;
+import org.apache.syncope.common.lib.to.PersonalAccessTokenCreateTO;
+import org.apache.syncope.common.lib.to.PersonalAccessTokenTO;
 import org.apache.syncope.common.rest.api.RESTHeaders;
 import org.apache.syncope.common.rest.api.beans.AccessTokenQuery;
 import org.apache.syncope.common.rest.api.service.AccessTokenService;
@@ -48,6 +51,15 @@ public class AccessTokenServiceImpl extends AbstractService implements AccessTok
     }
 
     @Override
+    public Response token(final PersonalAccessTokenCreateTO input) {
+        AccessTokenDataBinder.AccessTokenInfo token = logic.token(input);
+        return Response.noContent().
+                header(RESTHeaders.TOKEN, token.jwt()).
+                header(RESTHeaders.TOKEN_EXPIRE, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(token.expiration())).
+                build();
+    }
+
+    @Override
     public Response refresh() {
         AccessTokenDataBinder.AccessTokenInfo refresh = logic.refresh();
         return Response.noContent().
@@ -70,5 +82,15 @@ public class AccessTokenServiceImpl extends AbstractService implements AccessTok
     @Override
     public void delete(final String key) {
         logic.delete(key);
+    }
+
+    @Override
+    public List<PersonalAccessTokenTO> listPat() {
+        return logic.listPat();
+    }
+
+    @Override
+    public void deletePat(final String key) {
+        logic.deletePat(key);
     }
 }

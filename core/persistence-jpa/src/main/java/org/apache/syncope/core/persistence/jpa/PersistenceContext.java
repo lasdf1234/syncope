@@ -31,6 +31,7 @@ import org.apache.syncope.core.persistence.api.DomainHolder;
 import org.apache.syncope.core.persistence.api.DomainRegistry;
 import org.apache.syncope.core.persistence.api.attrvalue.PlainAttrValidationManager;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyMatchDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyObjectDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyTypeClassDAO;
@@ -98,6 +99,9 @@ import org.apache.syncope.core.persistence.jpa.dao.JPATaskExecDAO;
 import org.apache.syncope.core.persistence.jpa.dao.repo.AccessTokenRepo;
 import org.apache.syncope.core.persistence.jpa.dao.repo.AccessTokenRepoExt;
 import org.apache.syncope.core.persistence.jpa.dao.repo.AccessTokenRepoExtImpl;
+import org.apache.syncope.core.persistence.jpa.dao.repo.PersonalAccessTokenRepo;
+import org.apache.syncope.core.persistence.jpa.dao.repo.PersonalAccessTokenRepoExt;
+import org.apache.syncope.core.persistence.jpa.dao.repo.PersonalAccessTokenRepoExtImpl;
 import org.apache.syncope.core.persistence.jpa.dao.repo.AnyObjectRepo;
 import org.apache.syncope.core.persistence.jpa.dao.repo.AnyObjectRepoExt;
 import org.apache.syncope.core.persistence.jpa.dao.repo.AnyObjectRepoExtImpl;
@@ -376,6 +380,21 @@ public class PersistenceContext {
             final AccessTokenRepoExt accessTokenRepoExt) {
 
         return jpaRepositoryFactory.getRepository(AccessTokenRepo.class, accessTokenRepoExt);
+    }
+
+    @ConditionalOnMissingBean
+    @Bean
+    public PersonalAccessTokenRepoExt personalAccessTokenRepoExt(final EntityManager entityManager) {
+        return new PersonalAccessTokenRepoExtImpl(entityManager);
+    }
+
+    @ConditionalOnMissingBean
+    @Bean
+    public PersonalAccessTokenDAO personalAccessTokenDAO(
+            final JpaRepositoryFactory jpaRepositoryFactory,
+            final PersonalAccessTokenRepoExt personalAccessTokenRepoExt) {
+
+        return jpaRepositoryFactory.getRepository(PersonalAccessTokenRepo.class, personalAccessTokenRepoExt);
     }
 
     @ConditionalOnMissingBean
@@ -947,6 +966,7 @@ public class PersistenceContext {
             final @Lazy PlainSchemaDAO plainSchemaDAO,
             final RoleDAO roleDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final @Lazy GroupDAO groupDAO,
             final DelegationDAO delegationDAO,
             final FIQLQueryDAO fiqlQueryDAO,
@@ -957,6 +977,7 @@ public class PersistenceContext {
                 plainSchemaDAO,
                 roleDAO,
                 accessTokenDAO,
+                personalAccessTokenDAO,
                 groupDAO,
                 delegationDAO,
                 fiqlQueryDAO,

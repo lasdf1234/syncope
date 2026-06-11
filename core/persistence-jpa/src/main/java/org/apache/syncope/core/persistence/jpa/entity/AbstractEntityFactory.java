@@ -19,6 +19,7 @@
 package org.apache.syncope.core.persistence.jpa.entity;
 
 import org.apache.syncope.core.persistence.api.entity.AccessToken;
+import org.apache.syncope.core.persistence.api.entity.PersonalAccessToken;
 import org.apache.syncope.core.persistence.api.entity.AnyAbout;
 import org.apache.syncope.core.persistence.api.entity.AnyTemplateRealm;
 import org.apache.syncope.core.persistence.api.entity.AnyType;
@@ -237,6 +238,8 @@ abstract class AbstractEntityFactory implements EntityFactory {
             result = (E) new JPAAuditConf();
         } else if (reference.equals(AccessToken.class)) {
             result = (E) new JPAAccessToken();
+        } else if (reference.equals(PersonalAccessToken.class)) {
+            result = (E) new JPAPersonalAccessToken();
         } else if (reference.equals(Implementation.class)) {
             result = (E) new JPAImplementation();
         } else if (reference.equals(Remediation.class)) {

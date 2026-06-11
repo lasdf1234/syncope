@@ -105,7 +105,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
             // 2. check expiration
             Date expirationTime = claims.getExpirationTime();
             if (expirationTime != null && expirationTime.getTime() < referenceTime) {
-                dataAccessor.removeExpired(claims.getJWTID());
+                dataAccessor.removeExpired(claims.getJWTID(), claims.getIssuer());
                 throw new CredentialsExpiredException("JWT is expired");
             }
 

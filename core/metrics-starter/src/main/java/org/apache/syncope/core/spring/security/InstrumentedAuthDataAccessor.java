@@ -26,6 +26,7 @@ import java.util.function.Function;
 import org.apache.syncope.common.keymaster.client.api.ConfParamOps;
 import org.apache.syncope.core.persistence.api.EncryptorManager;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnySearchDAO;
 import org.apache.syncope.core.persistence.api.dao.DelegationDAO;
 import org.apache.syncope.core.persistence.api.dao.ExternalResourceDAO;
@@ -81,6 +82,7 @@ public class InstrumentedAuthDataAccessor extends AuthDataAccessor {
             final GroupDAO groupDAO,
             final AnySearchDAO anySearchDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final ConfParamOps confParamOps,
             final RoleDAO roleDAO,
             final DelegationDAO delegationDAO,
@@ -92,8 +94,8 @@ public class InstrumentedAuthDataAccessor extends AuthDataAccessor {
             final MeterRegistry meterRegistry) {
 
         super(securityProperties, encryptorManager, realmSearchDAO, userDAO, groupDAO, anySearchDAO, accessTokenDAO,
-                confParamOps, roleDAO, delegationDAO, resourceDAO, connectorManager, auditManager, mappingManager,
-                jwtSSOProviders);
+                personalAccessTokenDAO, confParamOps, roleDAO, delegationDAO, resourceDAO, connectorManager,
+                auditManager, mappingManager, jwtSSOProviders);
         this.meterRegistry = meterRegistry;
     }
 

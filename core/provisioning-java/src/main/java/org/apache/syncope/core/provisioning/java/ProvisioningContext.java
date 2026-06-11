@@ -30,6 +30,7 @@ import org.apache.syncope.core.persistence.api.DomainHolder;
 import org.apache.syncope.core.persistence.api.EncryptorManager;
 import org.apache.syncope.core.persistence.api.attrvalue.PlainAttrValidationManager;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyMatchDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyObjectDAO;
 import org.apache.syncope.core.persistence.api.dao.AnySearchDAO;
@@ -77,6 +78,7 @@ import org.apache.syncope.core.provisioning.api.IntAttrNameParser;
 import org.apache.syncope.core.provisioning.api.MappingManager;
 import org.apache.syncope.core.provisioning.api.UserProvisioningManager;
 import org.apache.syncope.core.provisioning.api.data.AccessTokenDataBinder;
+import org.apache.syncope.core.provisioning.api.data.PersonalAccessTokenDataBinder;
 import org.apache.syncope.core.provisioning.api.data.AnyObjectDataBinder;
 import org.apache.syncope.core.provisioning.api.data.AnyTypeClassDataBinder;
 import org.apache.syncope.core.provisioning.api.data.AnyTypeDataBinder;
@@ -119,6 +121,7 @@ import org.apache.syncope.core.provisioning.api.notification.NotificationManager
 import org.apache.syncope.core.provisioning.api.propagation.PropagationManager;
 import org.apache.syncope.core.provisioning.api.propagation.PropagationTaskExecutor;
 import org.apache.syncope.core.provisioning.java.data.AccessTokenDataBinderImpl;
+import org.apache.syncope.core.provisioning.java.data.PersonalAccessTokenDataBinderImpl;
 import org.apache.syncope.core.provisioning.java.data.AnyObjectDataBinderImpl;
 import org.apache.syncope.core.provisioning.java.data.AnyTypeClassDataBinderImpl;
 import org.apache.syncope.core.provisioning.java.data.AnyTypeDataBinderImpl;
@@ -709,6 +712,23 @@ public class ProvisioningContext {
 
     @ConditionalOnMissingBean
     @Bean
+    public PersonalAccessTokenDataBinder personalAccessTokenDataBinder(
+            final EntityFactory entityFactory,
+            final SecurityProperties securityProperties,
+            final AccessTokenJWSSigner jwsSigner,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
+            final DefaultCredentialChecker credentialChecker) {
+
+        return new PersonalAccessTokenDataBinderImpl(
+                securityProperties,
+                jwsSigner,
+                personalAccessTokenDAO,
+                entityFactory,
+                credentialChecker);
+    }
+
+    @ConditionalOnMissingBean
+    @Bean
     public AnyObjectDataBinder anyObjectDataBinder(
             final EntityFactory entityFactory,
             final AnyUtilsFactory anyUtilsFactory,
@@ -1127,6 +1147,7 @@ public class ProvisioningContext {
             final RoleDAO roleDAO,
             final SecurityQuestionDAO securityQuestionDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final DelegationDAO delegationDAO,
             final ConfParamOps confParamOps,
             final JexlTools jexlTools) {
@@ -1151,6 +1172,7 @@ public class ProvisioningContext {
                 roleDAO,
                 securityQuestionDAO,
                 accessTokenDAO,
+                personalAccessTokenDAO,
                 delegationDAO,
                 confParamOps,
                 securityProperties,

@@ -27,6 +27,7 @@ import org.apache.syncope.core.logic.init.IdRepoImplementationTypeLoader;
 import org.apache.syncope.core.persistence.api.EncryptorManager;
 import org.apache.syncope.core.persistence.api.content.ContentExporter;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyObjectDAO;
 import org.apache.syncope.core.persistence.api.dao.AnySearchDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyTypeClassDAO;
@@ -66,6 +67,7 @@ import org.apache.syncope.core.provisioning.api.GroupProvisioningManager;
 import org.apache.syncope.core.provisioning.api.ImplementationLookup;
 import org.apache.syncope.core.provisioning.api.UserProvisioningManager;
 import org.apache.syncope.core.provisioning.api.data.AccessTokenDataBinder;
+import org.apache.syncope.core.provisioning.api.data.PersonalAccessTokenDataBinder;
 import org.apache.syncope.core.provisioning.api.data.AnyObjectDataBinder;
 import org.apache.syncope.core.provisioning.api.data.AnyTypeClassDataBinder;
 import org.apache.syncope.core.provisioning.api.data.AnyTypeDataBinder;
@@ -144,11 +146,14 @@ public class IdRepoLogicContext {
     @Bean
     public AccessTokenLogic accessTokenLogic(
             final AccessTokenDataBinder binder,
+            final PersonalAccessTokenDataBinder patBinder,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final SecurityProperties securityProperties,
             final EncryptorManager encryptorManager) {
 
-        return new AccessTokenLogic(securityProperties, encryptorManager, binder, accessTokenDAO);
+        return new AccessTokenLogic(
+                securityProperties, encryptorManager, binder, patBinder, accessTokenDAO, personalAccessTokenDAO);
     }
 
     @ConditionalOnMissingBean

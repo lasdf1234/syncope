@@ -32,6 +32,7 @@ import org.apache.syncope.common.lib.types.CipherAlgorithm;
 import org.apache.syncope.core.persistence.api.ApplicationContextProvider;
 import org.apache.syncope.core.persistence.api.EncryptorManager;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.RealmSearchDAO;
 import org.apache.syncope.core.persistence.api.dao.UserDAO;
 import org.apache.syncope.core.provisioning.api.rules.RuleProvider;
@@ -137,6 +138,19 @@ public class SecurityContext {
             final AccessTokenDAO accessTokenDAO) {
 
         return new SyncopeJWTSSOProvider(props, encryptorManager, accessTokenJWSVerifier, userDAO, accessTokenDAO);
+    }
+
+    @ConditionalOnMissingBean
+    @Bean
+    public PatJWTSSOProvider patJWTSSOProvider(
+            final SecurityProperties props,
+            final EncryptorManager encryptorManager,
+            final AccessTokenJWSVerifier accessTokenJWSVerifier,
+            final UserDAO userDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO) {
+
+        return new PatJWTSSOProvider(
+                accessTokenJWSVerifier, encryptorManager, userDAO, personalAccessTokenDAO, props);
     }
 
     @ConditionalOnMissingBean

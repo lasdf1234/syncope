@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import org.apache.syncope.common.lib.types.AnyTypeKind;
 import org.apache.syncope.common.lib.types.IdRepoEntitlement;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.DelegationDAO;
 import org.apache.syncope.core.persistence.api.dao.FIQLQueryDAO;
 import org.apache.syncope.core.persistence.api.dao.GroupDAO;
@@ -64,6 +65,8 @@ public class UserRepoExtImpl extends AbstractAnyRepoExt<User> implements UserRep
 
     protected final AccessTokenDAO accessTokenDAO;
 
+    protected final PersonalAccessTokenDAO personalAccessTokenDAO;
+
     protected final GroupDAO groupDAO;
 
     protected final DelegationDAO delegationDAO;
@@ -77,6 +80,7 @@ public class UserRepoExtImpl extends AbstractAnyRepoExt<User> implements UserRep
             final PlainSchemaDAO plainSchemaDAO,
             final RoleDAO roleDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final GroupDAO groupDAO,
             final DelegationDAO delegationDAO,
             final FIQLQueryDAO fiqlQueryDAO,
@@ -89,6 +93,7 @@ public class UserRepoExtImpl extends AbstractAnyRepoExt<User> implements UserRep
                 anyUtilsFactory.getInstance(AnyTypeKind.USER));
         this.roleDAO = roleDAO;
         this.accessTokenDAO = accessTokenDAO;
+        this.personalAccessTokenDAO = personalAccessTokenDAO;
         this.groupDAO = groupDAO;
         this.delegationDAO = delegationDAO;
         this.fiqlQueryDAO = fiqlQueryDAO;
@@ -295,6 +300,7 @@ public class UserRepoExtImpl extends AbstractAnyRepoExt<User> implements UserRep
         fiqlQueryDAO.findByOwner(user, null).forEach(fiqlQueryDAO::delete);
 
         accessTokenDAO.findByOwner(user.getUsername()).ifPresent(accessTokenDAO::delete);
+        personalAccessTokenDAO.deleteByOwner(user.getUsername());
 
         entityManager.remove(user);
     }

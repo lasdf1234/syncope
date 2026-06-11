@@ -32,6 +32,7 @@ import javax.cache.Cache;
 import org.apache.syncope.common.lib.types.AnyTypeKind;
 import org.apache.syncope.common.lib.types.IdRepoEntitlement;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyTypeClassDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyTypeDAO;
 import org.apache.syncope.core.persistence.api.dao.DelegationDAO;
@@ -80,6 +81,8 @@ public class UserRepoExtImpl extends AbstractAnyRepoExt<User, Neo4jUser> impleme
 
     protected final AccessTokenDAO accessTokenDAO;
 
+    protected final PersonalAccessTokenDAO personalAccessTokenDAO;
+
     protected final GroupDAO groupDAO;
 
     protected final DelegationDAO delegationDAO;
@@ -104,6 +107,7 @@ public class UserRepoExtImpl extends AbstractAnyRepoExt<User, Neo4jUser> impleme
             final DerSchemaDAO derSchemaDAO,
             final RoleDAO roleDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final GroupDAO groupDAO,
             final DelegationDAO delegationDAO,
             final FIQLQueryDAO fiqlQueryDAO,
@@ -125,6 +129,7 @@ public class UserRepoExtImpl extends AbstractAnyRepoExt<User, Neo4jUser> impleme
                 neo4jClient);
         this.roleDAO = roleDAO;
         this.accessTokenDAO = accessTokenDAO;
+        this.personalAccessTokenDAO = personalAccessTokenDAO;
         this.groupDAO = groupDAO;
         this.delegationDAO = delegationDAO;
         this.fiqlQueryDAO = fiqlQueryDAO;
@@ -396,6 +401,7 @@ public class UserRepoExtImpl extends AbstractAnyRepoExt<User, Neo4jUser> impleme
         fiqlQueryDAO.findByOwner(user, null).forEach(fiqlQueryDAO::delete);
 
         accessTokenDAO.findByOwner(user.getUsername()).ifPresent(accessTokenDAO::delete);
+        personalAccessTokenDAO.deleteByOwner(user.getUsername());
 
         userCache.remove(EntityCacheKey.of(user.getKey()));
 

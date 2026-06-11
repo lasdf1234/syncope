@@ -24,6 +24,7 @@ import org.apache.syncope.common.keymaster.client.api.DomainOps;
 import org.apache.syncope.common.lib.types.IdRepoEntitlement;
 import org.apache.syncope.core.persistence.api.EncryptorManager;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnySearchDAO;
 import org.apache.syncope.core.persistence.api.dao.DelegationDAO;
 import org.apache.syncope.core.persistence.api.dao.ExternalResourceDAO;
@@ -152,6 +153,7 @@ public class WebSecurityContext {
             final GroupDAO groupDAO,
             final AnySearchDAO anySearchDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final ConfParamOps confParamOps,
             final RoleDAO roleDAO,
             final DelegationDAO delegationDAO,
@@ -169,6 +171,7 @@ public class WebSecurityContext {
                 groupDAO,
                 anySearchDAO,
                 accessTokenDAO,
+                personalAccessTokenDAO,
                 confParamOps,
                 roleDAO,
                 delegationDAO,

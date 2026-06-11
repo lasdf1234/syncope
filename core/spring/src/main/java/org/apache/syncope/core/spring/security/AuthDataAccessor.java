@@ -43,6 +43,7 @@ import org.apache.syncope.common.lib.types.IdRepoEntitlement;
 import org.apache.syncope.common.lib.types.OpEvent;
 import org.apache.syncope.core.persistence.api.EncryptorManager;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnySearchDAO;
 import org.apache.syncope.core.persistence.api.dao.DelegationDAO;
 import org.apache.syncope.core.persistence.api.dao.ExternalResourceDAO;
@@ -153,6 +154,8 @@ public class AuthDataAccessor {
 
     protected final AccessTokenDAO accessTokenDAO;
 
+    protected final PersonalAccessTokenDAO personalAccessTokenDAO;
+
     protected final ConfParamOps confParamOps;
 
     protected final RoleDAO roleDAO;
@@ -177,6 +180,7 @@ public class AuthDataAccessor {
             final GroupDAO groupDAO,
             final AnySearchDAO anySearchDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final ConfParamOps confParamOps,
             final RoleDAO roleDAO,
             final DelegationDAO delegationDAO,
@@ -193,6 +197,7 @@ public class AuthDataAccessor {
         this.groupDAO = groupDAO;
         this.anySearchDAO = anySearchDAO;
         this.accessTokenDAO = accessTokenDAO;
+        this.personalAccessTokenDAO = personalAccessTokenDAO;
         this.confParamOps = confParamOps;
         this.roleDAO = roleDAO;
         this.delegationDAO = delegationDAO;
@@ -470,9 +475,16 @@ public class AuthDataAccessor {
         Set<SyncopeGrantedAuthority> authorities;
 
         if (securityProperties.getAdminUser().equals(authentication.getClaims().getSubject())) {
-            accessTokenDAO.findById(authentication.getClaims().getJWTID()).
-                    orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
-                    "Could not find an Access Token for JWT " + authentication.getClaims().getJWTID()));
+            if (PatTokenConstants.ISSUER.equals(authentication.getClaims().getIssuer())) {
+                personalAccessTokenDAO.findById(authentication.getClaims().getJWTID()).
+                        orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
+                        "Could not find a Personal Access Token for JWT "
+                        + authentication.getClaims().getJWTID()));
+            } else {
+                accessTokenDAO.findById(authentication.getClaims().getJWTID()).
+                        orElseThrow(() -> new AuthenticationCredentialsNotFoundException(
+                        "Could not find an Access Token for JWT " + authentication.getClaims().getJWTID()));
+            }
 
             username = securityProperties.getAdminUser();
             authorities = getAdminAuthorities();
@@ -518,8 +530,12 @@ public class AuthDataAccessor {
     }
 
     @Transactional
-    public void removeExpired(final String tokenKey) {
-        accessTokenDAO.deleteById(tokenKey);
+    public void removeExpired(final String tokenKey, final String issuer) {
+        if (PatTokenConstants.ISSUER.equals(issuer)) {
+            personalAccessTokenDAO.deleteById(tokenKey);
+        } else {
+            accessTokenDAO.deleteById(tokenKey);
+        }
     }
 
     @Transactional(readOnly = true)

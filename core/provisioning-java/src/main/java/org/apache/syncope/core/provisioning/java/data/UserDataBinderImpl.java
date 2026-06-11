@@ -49,6 +49,7 @@ import org.apache.syncope.common.lib.types.PatchOperation;
 import org.apache.syncope.common.lib.types.ResourceOperation;
 import org.apache.syncope.core.persistence.api.attrvalue.PlainAttrValidationManager;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyObjectDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyTypeClassDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyTypeDAO;
@@ -96,6 +97,8 @@ public class UserDataBinderImpl extends AnyDataBinder implements UserDataBinder 
 
     protected final AccessTokenDAO accessTokenDAO;
 
+    protected final PersonalAccessTokenDAO personalAccessTokenDAO;
+
     protected final DelegationDAO delegationDAO;
 
     protected final ConfParamOps confParamOps;
@@ -122,6 +125,7 @@ public class UserDataBinderImpl extends AnyDataBinder implements UserDataBinder 
             final RoleDAO roleDAO,
             final SecurityQuestionDAO securityQuestionDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final DelegationDAO delegationDAO,
             final ConfParamOps confParamOps,
             final SecurityProperties securityProperties,
@@ -148,6 +152,7 @@ public class UserDataBinderImpl extends AnyDataBinder implements UserDataBinder 
         this.roleDAO = roleDAO;
         this.securityQuestionDAO = securityQuestionDAO;
         this.accessTokenDAO = accessTokenDAO;
+        this.personalAccessTokenDAO = personalAccessTokenDAO;
         this.delegationDAO = delegationDAO;
         this.confParamOps = confParamOps;
         this.securityProperties = securityProperties;
@@ -397,6 +402,11 @@ public class UserDataBinderImpl extends AnyDataBinder implements UserDataBinder 
             accessTokenDAO.findByOwner(oldUsername).ifPresent(accessToken -> {
                 accessToken.setOwner(userUR.getUsername().getValue());
                 accessTokenDAO.save(accessToken);
+            });
+
+            personalAccessTokenDAO.findByOwner(oldUsername).forEach(pat -> {
+                pat.setOwner(userUR.getUsername().getValue());
+                personalAccessTokenDAO.save(pat);
             });
         }
 

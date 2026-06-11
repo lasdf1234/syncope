@@ -66,6 +66,18 @@ under the License.
             <column name="owner" type="varchar" size="255"/>
             <unique name="U_CCSSTKN_OWNER" column="owner"/>
         </table>
+        <table name="PersonalAccessToken">
+            <pk column="id"/>
+            <column name="id" type="varchar" not-null="true" size="255"/>
+            <column name="owner" type="varchar" not-null="true" size="255"/>
+            <column name="name" type="varchar" size="255"/>
+            <column name="authorities" type="clob" size="-1"/>
+            <column name="expirationTime" type="timestamp" not-null="true"/>
+            <column name="createdTime" type="timestamp" not-null="true"/>
+            <column name="lastUsedTime" type="timestamp"/>
+            <index name="I_PAT_OWNER" column="owner"/>
+            <index name="I_PAT_EXPIRATION" column="expirationTime"/>
+        </table>
         <table name="AccountPolicy">
             <pk column="id"/>
             <column name="id" type="varchar" not-null="true" size="36"/>

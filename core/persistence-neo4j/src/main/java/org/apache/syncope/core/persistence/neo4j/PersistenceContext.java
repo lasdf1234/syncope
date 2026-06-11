@@ -33,6 +33,7 @@ import org.apache.syncope.core.persistence.api.DomainHolder;
 import org.apache.syncope.core.persistence.api.DomainRegistry;
 import org.apache.syncope.core.persistence.api.attrvalue.PlainAttrValidationManager;
 import org.apache.syncope.core.persistence.api.dao.AccessTokenDAO;
+import org.apache.syncope.core.persistence.api.dao.PersonalAccessTokenDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyMatchDAO;
 import org.apache.syncope.core.persistence.api.dao.AnyObjectDAO;
 import org.apache.syncope.core.persistence.api.dao.AnySearchDAO;
@@ -103,6 +104,7 @@ import org.apache.syncope.core.persistence.neo4j.dao.Neo4jRealmSearchDAO;
 import org.apache.syncope.core.persistence.neo4j.dao.Neo4jTaskDAO;
 import org.apache.syncope.core.persistence.neo4j.dao.Neo4jTaskExecDAO;
 import org.apache.syncope.core.persistence.neo4j.dao.repo.AccessTokenRepo;
+import org.apache.syncope.core.persistence.neo4j.dao.repo.PersonalAccessTokenRepo;
 import org.apache.syncope.core.persistence.neo4j.dao.repo.AnyObjectRepo;
 import org.apache.syncope.core.persistence.neo4j.dao.repo.AnyObjectRepoExt;
 import org.apache.syncope.core.persistence.neo4j.dao.repo.AnyObjectRepoExtImpl;
@@ -439,6 +441,12 @@ public class PersistenceContext {
     @Bean
     public AccessTokenDAO accessTokenDAO(final SyncopeNeo4jRepositoryFactory neo4jRepositoryFactory) {
         return neo4jRepositoryFactory.getRepository(AccessTokenRepo.class);
+    }
+
+    @ConditionalOnMissingBean
+    @Bean
+    public PersonalAccessTokenDAO personalAccessTokenDAO(final SyncopeNeo4jRepositoryFactory neo4jRepositoryFactory) {
+        return neo4jRepositoryFactory.getRepository(PersonalAccessTokenRepo.class);
     }
 
     @ConditionalOnMissingBean
@@ -1406,6 +1414,7 @@ public class PersistenceContext {
             final @Lazy DerSchemaDAO derSchemaDAO,
             final RoleDAO roleDAO,
             final AccessTokenDAO accessTokenDAO,
+            final PersonalAccessTokenDAO personalAccessTokenDAO,
             final @Lazy GroupDAO groupDAO,
             final DelegationDAO delegationDAO,
             final FIQLQueryDAO fiqlQueryDAO,
@@ -1424,6 +1433,7 @@ public class PersistenceContext {
                 derSchemaDAO,
                 roleDAO,
                 accessTokenDAO,
+                personalAccessTokenDAO,
                 groupDAO,
                 delegationDAO,
                 fiqlQueryDAO,

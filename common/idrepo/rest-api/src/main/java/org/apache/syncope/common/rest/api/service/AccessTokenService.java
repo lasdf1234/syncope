@@ -37,6 +37,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.apache.syncope.common.lib.to.AccessTokenTO;
 import org.apache.syncope.common.lib.to.PagedResult;
+import org.apache.syncope.common.lib.to.PersonalAccessTokenCreateTO;
+import org.apache.syncope.common.lib.to.PersonalAccessTokenTO;
+import java.util.List;
 import org.apache.syncope.common.rest.api.RESTHeaders;
 import org.apache.syncope.common.rest.api.beans.AccessTokenQuery;
 
@@ -68,6 +71,30 @@ public interface AccessTokenService extends JAXRSService {
     @Path("login")
     @Produces({ MediaType.APPLICATION_JSON })
     Response login();
+
+    /**
+     * Returns an empty response bearing the X-Syncope-Token header value for a personal access token.
+     * Each call creates a new token; default lifetime is 365 days and can be customized via request body.
+     *
+     * @param input optional name and lifetime in days
+     * @return empty response bearing the X-Syncope-Token header value
+     */
+    @Operation(security = {
+        @SecurityRequirement(name = "BasicAuthentication") })
+    @ApiResponses({
+        @ApiResponse(responseCode = "204",
+                description = "PAT successfully generated", headers = {
+                    @Header(name = RESTHeaders.TOKEN, schema =
+                            @Schema(type = "string"), description = "Generated JWT"),
+                    @Header(name = RESTHeaders.TOKEN_EXPIRE, schema =
+                            @Schema(type = "string"), description = "Expiration of the generated JWT") }),
+        @ApiResponse(responseCode = "401", description = "Invalid username or password")
+    })
+    @POST
+    @Path("token")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    Response token(PersonalAccessTokenCreateTO input);
 
     /**
      * Returns an empty response bearing the X-Syncope-Token header value, with extended lifetime.
@@ -131,4 +158,32 @@ public interface AccessTokenService extends JAXRSService {
     @Path("{key}")
     @Produces({ MediaType.APPLICATION_JSON })
     void delete(@PathParam("key") String key);
+
+    /**
+     * Returns the personal access tokens owned by the requesting user.
+     *
+     * @return personal access tokens owned by the requesting user
+     */
+    @Operation(security = {
+        @SecurityRequirement(name = "BasicAuthentication"),
+        @SecurityRequirement(name = "Bearer") })
+    @GET
+    @Path("pat")
+    @Produces({ MediaType.APPLICATION_JSON })
+    List<PersonalAccessTokenTO> listPat();
+
+    /**
+     * Revokes the personal access token matching the provided key.
+     *
+     * @param key personal access token key
+     */
+    @Operation(security = {
+        @SecurityRequirement(name = "BasicAuthentication"),
+        @SecurityRequirement(name = "Bearer") })
+    @ApiResponses(
+            @ApiResponse(responseCode = "204", description = "Operation was successful"))
+    @DELETE
+    @Path("pat/{key}")
+    @Produces({ MediaType.APPLICATION_JSON })
+    void deletePat(@PathParam("key") String key);
 }
