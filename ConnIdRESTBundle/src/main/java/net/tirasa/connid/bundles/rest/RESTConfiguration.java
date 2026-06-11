@@ -142,6 +142,30 @@ public class RESTConfiguration extends AbstractScriptedConfiguration {
         this.accessTokenContentType = accessTokenContentType;
     }
 
+    private String accessTokenGrantType;
+
+    @ConfigurationProperty(displayMessageKey = "accessTokenGrantType.display",
+            helpMessageKey = "accessTokenGrantType.help", order = 7)
+    public String getAccessTokenGrantType() {
+        return accessTokenGrantType;
+    }
+
+    public void setAccessTokenGrantType(final String accessTokenGrantType) {
+        this.accessTokenGrantType = accessTokenGrantType;
+    }
+
+    private String accessTokenScope;
+
+    @ConfigurationProperty(displayMessageKey = "accessTokenScope.display",
+            helpMessageKey = "accessTokenScope.help", order = 8)
+    public String getAccessTokenScope() {
+        return accessTokenScope;
+    }
+
+    public void setAccessTokenScope(final String accessTokenScope) {
+        this.accessTokenScope = accessTokenScope;
+    }
+
     @Override
     public void validate() {
         LOG.info("Validate " + getClass().getName());

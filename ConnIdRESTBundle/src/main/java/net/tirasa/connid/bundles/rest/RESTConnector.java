@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import net.tirasa.connid.commons.scripted.AbstractScriptedConnector;
@@ -78,15 +80,7 @@ public class RESTConnector extends AbstractScriptedConnector<RESTConfiguration> 
                 .type(config.getAccessTokenContentType())
                 .accept(config.getAccept());
 
-        String contentUri = new StringBuilder("&client_id=")
-                .append(config.getClientId())
-                .append("&client_secret=")
-                .append(config.getClientSecret())
-                .append("&username=")
-                .append(config.getUsername())
-                .append("&password=")
-                .append(SecurityUtil.decrypt(config.getPassword()))
-                .toString();
+        String contentUri = buildTokenRequestBody();
         String token = null;
         try {
             Response response = webClient.post(contentUri);
@@ -101,6 +95,33 @@ public class RESTConnector extends AbstractScriptedConnector<RESTConfiguration> 
         }
 
         return token;
+    }
+
+    protected String buildTokenRequestBody() {
+        StringBuilder body = new StringBuilder();
+        appendFormParam(body, "grant_type", config.getAccessTokenGrantType());
+        appendFormParam(body, "scope", config.getAccessTokenScope());
+        appendFormParam(body, "client_id", config.getClientId());
+        appendFormParam(body, "client_secret", config.getClientSecret());
+
+        if (!"client_credentials".equalsIgnoreCase(config.getAccessTokenGrantType())) {
+            appendFormParam(body, "username", config.getUsername());
+            if (config.getPassword() != null) {
+                appendFormParam(body, "password", SecurityUtil.decrypt(config.getPassword()));
+            }
+        }
+
+        return body.toString();
+    }
+
+    private static void appendFormParam(final StringBuilder body, final String name, final String value) {
+        if (StringUtil.isBlank(value)) {
+            return;
+        }
+        if (body.length() > 0) {
+            body.append('&');
+        }
+        body.append(name).append('=').append(URLEncoder.encode(value, StandardCharsets.UTF_8));
     }
 
     @Override
