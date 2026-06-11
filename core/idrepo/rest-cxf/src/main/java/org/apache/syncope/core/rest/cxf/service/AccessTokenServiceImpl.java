@@ -48,15 +48,6 @@ public class AccessTokenServiceImpl extends AbstractService implements AccessTok
     }
 
     @Override
-    public Response token() {
-        AccessTokenDataBinder.AccessTokenInfo token = logic.token();
-        return Response.noContent().
-                header(RESTHeaders.TOKEN, token.jwt()).
-                header(RESTHeaders.TOKEN_EXPIRE, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(token.expiration())).
-                build();
-    }
-
-    @Override
     public Response refresh() {
         AccessTokenDataBinder.AccessTokenInfo refresh = logic.refresh();
         return Response.noContent().
