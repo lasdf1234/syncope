@@ -36,6 +36,7 @@ import java.util.UUID;
 import org.apache.syncope.common.lib.to.Provision;
 import org.apache.syncope.common.lib.to.ProvisioningReport;
 import org.apache.syncope.common.lib.types.AnyTypeKind;
+import org.apache.syncope.common.lib.types.ResourceOperation;
 import org.apache.syncope.core.persistence.api.dao.GroupDAO;
 import org.apache.syncope.core.persistence.api.dao.UserDAO;
 import org.apache.syncope.core.persistence.api.entity.ExternalResource;
@@ -55,6 +56,8 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -185,6 +188,8 @@ public class RestOrphanCleanupPushActionsTest extends AbstractTest {
         verify(connector, never()).delete(eq(accountClass), eq(new Uid(SYNCOPE_USER_UID)), any(), any());
         // ORPHAN_UID is NOT in Syncope → deleted
         verify(connector, times(1)).delete(eq(accountClass), eq(new Uid(ORPHAN_UID)), any(), any());
+        assertEquals(1, orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.SUCCESS).size());
+        assertEquals(ORPHAN_UID, orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.SUCCESS).get(0).getName());
     }
 
     // -------------------------------------------------------------------------
@@ -206,6 +211,8 @@ public class RestOrphanCleanupPushActionsTest extends AbstractTest {
         actions.afterAll(profile);
 
         verify(connector, never()).delete(any(), any(), any(), any());
+        assertTrue(orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.SUCCESS).isEmpty());
+        assertTrue(orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.FAILURE).isEmpty());
     }
 
     // -------------------------------------------------------------------------
@@ -230,6 +237,7 @@ public class RestOrphanCleanupPushActionsTest extends AbstractTest {
 
         verify(connector, never()).delete(eq(groupClass), eq(new Uid(SYNCOPE_GROUP_UID)), any(), any());
         verify(connector, times(1)).delete(eq(groupClass), eq(new Uid(ORPHAN_GROUP_UID)), any(), any());
+        assertEquals(1, orphanDeleteReports(AnyTypeKind.GROUP, ProvisioningReport.Status.SUCCESS).size());
     }
 
     // -------------------------------------------------------------------------
@@ -348,6 +356,38 @@ public class RestOrphanCleanupPushActionsTest extends AbstractTest {
 
         verify(connector, times(1)).delete(eq(accountClass), eq(new Uid(ORPHAN_UID)), any(), any());
         verify(connector, times(1)).delete(eq(accountClass), eq(new Uid("second-orphan")), any(), any());
+        assertEquals(1, orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.FAILURE).size());
+        assertEquals(1, orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.SUCCESS).size());
+        assertEquals("second-orphan",
+                orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.SUCCESS).get(0).getName());
+    }
+
+    @Test
+    public void afterAllSearchFailureDoesNotPropagate() {
+        when(profile.isDryRun()).thenReturn(false);
+        results.add(report(USER_KEY, AnyTypeKind.USER));
+
+        ObjectClass accountClass = new ObjectClass("__ACCOUNT__");
+        ObjectClass groupClass = new ObjectClass("__GROUP__");
+        doAnswer(inv -> {
+            throw new RuntimeException("Search script error");
+        }).when(connector).search(eq(accountClass), any(), any(SearchResultsHandler.class), any());
+        stubConnectorSearch(groupClass);
+
+        actions.afterAll(profile);
+
+        verify(connector, never()).delete(any(), any(), any(), any());
+        verify(connector).search(eq(groupClass), any(), any(SearchResultsHandler.class), any());
+    }
+
+    @Test
+    public void afterAllResourceSetupFailureDoesNotPropagate() {
+        when(profile.isDryRun()).thenReturn(false);
+        when(profile.getTask()).thenThrow(new RuntimeException("task unavailable"));
+
+        actions.afterAll(profile);
+
+        verify(connector, never()).search(any(), any(), any(), any());
     }
 
     @Test
@@ -379,5 +419,16 @@ public class RestOrphanCleanupPushActionsTest extends AbstractTest {
         report.setAnyType(anyTypeKind.name());
         report.setName(UUID.randomUUID().toString());
         return report;
+    }
+
+    private List<ProvisioningReport> orphanDeleteReports(
+            final AnyTypeKind anyTypeKind,
+            final ProvisioningReport.Status status) {
+
+        return results.stream()
+                .filter(r -> anyTypeKind.name().equals(r.getAnyType()))
+                .filter(r -> ResourceOperation.DELETE == r.getOperation())
+                .filter(r -> status == r.getStatus())
+                .toList();
     }
 }

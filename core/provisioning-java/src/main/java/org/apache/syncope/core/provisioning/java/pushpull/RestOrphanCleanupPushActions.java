@@ -24,10 +24,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.syncope.common.lib.to.Provision;
 import org.apache.syncope.common.lib.to.ProvisioningReport;
 import org.apache.syncope.common.lib.types.AnyTypeKind;
+import org.apache.syncope.common.lib.types.ResourceOperation;
 import org.apache.syncope.core.persistence.api.dao.GroupDAO;
 import org.apache.syncope.core.persistence.api.dao.UserDAO;
 import org.apache.syncope.core.persistence.api.entity.Any;
@@ -98,21 +100,37 @@ public class RestOrphanCleanupPushActions implements PushActions {
             return;
         }
 
-        ExternalResource resource = profile.getTask().getResource();
-        String resourceKey = resource.getKey();
-        LOG.info("Downstream orphan cleanup started, resource={}", resourceKey);
+        try {
+            ExternalResource resource = profile.getTask().getResource();
+            String resourceKey = resource.getKey();
+            LOG.info("Downstream orphan cleanup started, resource={}", resourceKey);
 
-        resource.getProvisionByAnyType(AnyTypeKind.USER.name()).ifPresentOrElse(userProvision -> {
-            List<String> usernames = expectedDownstreamIdentifiers(profile, resource, AnyTypeKind.USER, userProvision);
-            LOG.info("This push processed users: {}", String.join(", ", usernames));
-            cleanDownstream(profile, usernames, AnyTypeKind.USER);
-        }, () -> LOG.debug("No USER provision found for resource {}, skipping USER cleanup", resourceKey));
+            try {
+                resource.getProvisionByAnyType(AnyTypeKind.USER.name()).ifPresentOrElse(userProvision -> {
+                    List<String> usernames = expectedDownstreamIdentifiers(
+                            profile, resource, AnyTypeKind.USER, userProvision);
+                    LOG.info("This push processed users: {}", String.join(", ", usernames));
+                    cleanDownstream(profile, usernames, AnyTypeKind.USER);
+                }, () -> LOG.debug(
+                        "No USER provision found for resource {}, skipping USER cleanup", resourceKey));
+            } catch (Exception e) {
+                LOG.error("Downstream USER orphan cleanup failed, skipping", e);
+            }
 
-        resource.getProvisionByAnyType(AnyTypeKind.GROUP.name()).ifPresentOrElse(groupProvision -> {
-            List<String> groupnames = expectedDownstreamIdentifiers(profile, resource, AnyTypeKind.GROUP, groupProvision);
-            LOG.info("This push processed groups: {}", String.join(", ", groupnames));
-            cleanDownstream(profile, groupnames, AnyTypeKind.GROUP);
-        }, () -> LOG.debug("No GROUP provision found for resource {}, skipping GROUP cleanup", resourceKey));
+            try {
+                resource.getProvisionByAnyType(AnyTypeKind.GROUP.name()).ifPresentOrElse(groupProvision -> {
+                    List<String> groupnames = expectedDownstreamIdentifiers(
+                            profile, resource, AnyTypeKind.GROUP, groupProvision);
+                    LOG.info("This push processed groups: {}", String.join(", ", groupnames));
+                    cleanDownstream(profile, groupnames, AnyTypeKind.GROUP);
+                }, () -> LOG.debug(
+                        "No GROUP provision found for resource {}, skipping GROUP cleanup", resourceKey));
+            } catch (Exception e) {
+                LOG.error("Downstream GROUP orphan cleanup failed, skipping", e);
+            }
+        } catch (Exception e) {
+            LOG.error("Downstream orphan cleanup failed before processing", e);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -163,13 +181,35 @@ public class RestOrphanCleanupPushActions implements PushActions {
                         new OperationOptionsBuilder().build(),
                         new MutableBoolean());
                     deleted++;
+                    recordOrphanDelete(profile, anyTypeKind, uid, null);
                 } catch (Exception e) {
                     LOG.error("Failed to delete downstream {} orphan uid={}", anyTypeKind, uid, e);
+                    recordOrphanDelete(profile, anyTypeKind, uid, e);
                 }
             }
         }
 
         LOG.info("Downstream {} cleanup done. Deleted={}", anyTypeKind, deleted);
+    }
+
+    private void recordOrphanDelete(
+            final ProvisioningProfile<?, ?> profile,
+            final AnyTypeKind anyTypeKind,
+            final String uid,
+            final Exception error) {
+
+        ProvisioningReport report = new ProvisioningReport();
+        report.setOperation(ResourceOperation.DELETE);
+        report.setAnyType(anyTypeKind.name());
+        report.setName(uid);
+        report.setUidValue(uid);
+        if (error == null) {
+            report.setStatus(ProvisioningReport.Status.SUCCESS);
+        } else {
+            report.setStatus(ProvisioningReport.Status.FAILURE);
+            report.setMessage(ExceptionUtils.getRootCauseMessage(error));
+        }
+        profile.getResults().add(report);
     }
 
     private List<String> expectedDownstreamIdentifiers(
