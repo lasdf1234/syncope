@@ -17,17 +17,8 @@
  * under the License.
  */
 import jakarta.ws.rs.core.Response
+import net.tirasa.connid.bundles.rest.RestScriptHelper
 import org.apache.cxf.jaxrs.client.WebClient
-
-// Parameters:
-// The connector sends us the following:
-// client : CXF WebClient
-// action: String corresponding to the action ("DELETE" here)
-// log: a handler to the Log facility
-// objectClass: a String describing the Object class (__ACCOUNT__ / __GROUP__ / other)
-// uid: The entry unique identifier
-// id: The entry identifier (same as uid for most cases)
-// options: a handler to the OperationOptions Map
 
 log.info("Entering " + action + " Script");
 
@@ -45,6 +36,7 @@ case "__ACCOUNT__":
   Response response = webClient.delete();
 
   log.ok("Delete user response: {0} {1}", response.getStatus(), response.getHeaders());
+  RestScriptHelper.failIfNotOk(response, "Delete user failed:");
   break
 
 case "__GROUP__":
@@ -58,6 +50,7 @@ case "__GROUP__":
   Response response = webClient.delete();
 
   log.ok("Delete group response: {0} {1}", response.getStatus(), response.getHeaders());
+  RestScriptHelper.failIfNotOk(response, "Delete group failed:");
   break
 
 default:

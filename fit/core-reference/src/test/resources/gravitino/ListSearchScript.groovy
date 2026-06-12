@@ -18,19 +18,9 @@
  */
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.ws.rs.core.Response
+import net.tirasa.connid.bundles.rest.RestScriptHelper
 import org.apache.cxf.jaxrs.client.WebClient
 import org.identityconnectors.framework.common.objects.OperationOptions
-
-// Parameters:
-// client      : CXF WebClient
-// objectClass : "__ACCOUNT__" or "__GROUP__"
-// action      : "SEARCH"
-// log         : Log facility
-// query       : Map {conditionType, left, right} or null for fetch-all
-// options     : OperationOptions Map
-//
-// Returns: List of Maps, each with __UID__ and __NAME__ (required).
-//          Last element must be pagination cookie map.
 
 log.info("Entering " + action + " Script, objectClass=" + objectClass);
 
@@ -40,7 +30,6 @@ def result = [];
 
 switch (objectClass) {
 case "__ACCOUNT__":
-    // GET /users  -> NameListResponse { "names": [...] }
     webClient.path("/users");
     webClient.accept("application/vnd.gravitino.v1+json");
 
@@ -49,20 +38,16 @@ case "__ACCOUNT__":
     Response response = webClient.get();
 
     log.ok("List users response: {0}", response.getStatus());
+    RestScriptHelper.failIfNotOk(response, "List users failed:");
 
-    if (response.getStatus() == 200) {
-        def body = mapper.readValue(response.readEntity(String.class), Map.class);
-        def names = body.get("names") ?: [];
-        names.each { name ->
-            result.add([__UID__: name, __NAME__: name, name: name]);
-        }
-    } else {
-        log.warn("Failed to list users from Gravitino (status={0})", response.getStatus());
+    def body = mapper.readValue(response.readEntity(String.class), Map.class);
+    def names = body.get("names") ?: [];
+    names.each { name ->
+        result.add([__UID__: name, __NAME__: name, name: name]);
     }
     break
 
 case "__GROUP__":
-    // GET /groups  -> NameListResponse { "names": [...] }
     webClient.path("/groups");
     webClient.accept("application/vnd.gravitino.v1+json");
 
@@ -71,15 +56,12 @@ case "__GROUP__":
     Response response = webClient.get();
 
     log.ok("List groups response: {0}", response.getStatus());
+    RestScriptHelper.failIfNotOk(response, "List groups failed:");
 
-    if (response.getStatus() == 200) {
-        def body = mapper.readValue(response.readEntity(String.class), Map.class);
-        def names = body.get("names") ?: [];
-        names.each { name ->
-            result.add([__UID__: name, __NAME__: name, name: name]);
-        }
-    } else {
-        log.warn("Failed to list groups from Gravitino (status={0})", response.getStatus());
+    def body = mapper.readValue(response.readEntity(String.class), Map.class);
+    def names = body.get("names") ?: [];
+    names.each { name ->
+        result.add([__UID__: name, __NAME__: name, name: name]);
     }
     break
 
@@ -87,7 +69,6 @@ default:
     log.warn("Unsupported objectClass for SEARCH: {0}", objectClass);
 }
 
-// Required pagination cookie entry
 result.add([(OperationOptions.OP_PAGED_RESULTS_COOKIE): null]);
 
 return result;

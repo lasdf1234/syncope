@@ -17,21 +17,9 @@
  * under the License.
  */
 import jakarta.ws.rs.core.Response
+import net.tirasa.connid.bundles.rest.RestScriptHelper
 import org.apache.cxf.jaxrs.client.WebClient
 import org.identityconnectors.framework.common.objects.OperationOptions
-
-// Parameters:
-// The connector sends us the following:
-// client:      CXF WebClient
-// action:      String corresponding to the action ("SEARCH" here)
-// log:         a handler to the Log facility
-// objectClass: a String describing the Object class (__ACCOUNT__ / __GROUP__ / other)
-// query:       a Map describing the filter: { conditionType, left, right }
-//              or null to fetch all
-// options:     a handler to the OperationOptions Map
-//
-// Returns: A List of Maps. Each Map must contain __UID__ and __NAME__.
-//          Last element must be the pagination cookie Map.
 
 log.info("Entering " + action + " Script");
 
@@ -39,7 +27,6 @@ WebClient webClient = client;
 
 def result = [];
 
-// Extract the value to look up from the query filter
 String uidValue = null;
 if (query != null) {
   log.info("Query: {0}", query.toString());
@@ -49,7 +36,6 @@ if (query != null) {
 switch (objectClass) {
 case "__ACCOUNT__":
   if (uidValue != null) {
-    // GET /users/{user}
     webClient.path("/users/" + uidValue);
     webClient.accept("application/vnd.gravitino.v1+json");
 
@@ -57,19 +43,21 @@ case "__ACCOUNT__":
 
     Response response = webClient.get();
 
-    log.ok("Get user response: {0}", response.getStatus());
+    int status = response.getStatus();
+    log.ok("Get user response: {0}", status);
 
-    if (response.getStatus() == 200) {
+    if (status == 200) {
       result.add([__UID__: uidValue, __NAME__: uidValue, name: uidValue]);
+    } else if (status == 404) {
+      log.warn("User {0} not found in Gravitino (status=404)", uidValue);
     } else {
-      log.warn("User {0} not found in Gravitino (status={1})", uidValue, response.getStatus());
+      RestScriptHelper.fail(response, "Get user " + uidValue + " failed:");
     }
   }
   break
 
 case "__GROUP__":
   if (uidValue != null) {
-    // GET /groups/{group}
     webClient.path("/groups/" + uidValue);
     webClient.accept("application/vnd.gravitino.v1+json");
 
@@ -77,12 +65,15 @@ case "__GROUP__":
 
     Response response = webClient.get();
 
-    log.ok("Get group response: {0}", response.getStatus());
+    int status = response.getStatus();
+    log.ok("Get group response: {0}", status);
 
-    if (response.getStatus() == 200) {
+    if (status == 200) {
       result.add([__UID__: uidValue, __NAME__: uidValue, name: uidValue]);
+    } else if (status == 404) {
+      log.warn("Group {0} not found in Gravitino (status=404)", uidValue);
     } else {
-      log.warn("Group {0} not found in Gravitino (status={1})", uidValue, response.getStatus());
+      RestScriptHelper.fail(response, "Get group " + uidValue + " failed:");
     }
   }
   break
@@ -91,7 +82,6 @@ default:
   log.warn("Unsupported objectClass for SEARCH: {0}", objectClass);
 }
 
-// Required: pagination cookie entry as last element
 result.add([(OperationOptions.OP_PAGED_RESULTS_COOKIE): null]);
 
 return result;

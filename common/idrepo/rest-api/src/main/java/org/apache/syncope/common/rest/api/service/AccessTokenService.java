@@ -35,11 +35,11 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.List;
 import org.apache.syncope.common.lib.to.AccessTokenTO;
 import org.apache.syncope.common.lib.to.PagedResult;
 import org.apache.syncope.common.lib.to.PersonalAccessTokenCreateTO;
 import org.apache.syncope.common.lib.to.PersonalAccessTokenTO;
-import java.util.List;
 import org.apache.syncope.common.rest.api.RESTHeaders;
 import org.apache.syncope.common.rest.api.beans.AccessTokenQuery;
 

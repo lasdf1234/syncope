@@ -19,19 +19,8 @@
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import jakarta.ws.rs.core.Response
+import net.tirasa.connid.bundles.rest.RestScriptHelper
 import org.apache.cxf.jaxrs.client.WebClient
-
-// Parameters:
-// The connector sends us the following:
-// client : CXF WebClient
-// action: String correponding to the action ("CREATE" here)
-// log: a handler to the Log facility
-// objectClass: a String describing the Object class (__ACCOUNT__ / __GROUP__ / other)
-// id: The entry identifier (ConnId's "Name" atribute. (most often matches the uid))
-// attributes: an Attribute Map, containg the <String> attribute name as a key
-// and the <List> attribute value(s) as value.
-// password: password string, clear text
-// options: a handler to the OperationOptions Map
 
 log.info("Entering " + action + " Script");
 
@@ -57,6 +46,7 @@ case "__ACCOUNT__":
   Response response = webClient.post(payload);
 
   log.ok("Create response: {0} {1}", response.getStatus(), response.getHeaders());
+  RestScriptHelper.failIfNotOk(response, "Create user failed:");
 
   key = name;
   break
@@ -77,6 +67,7 @@ case "__GROUP__":
   Response response = webClient.post(payload);
 
   log.ok("Create response: {0} {1}", response.getStatus(), response.getHeaders());
+  RestScriptHelper.failIfNotOk(response, "Create group failed:");
 
   key = name;
   break
