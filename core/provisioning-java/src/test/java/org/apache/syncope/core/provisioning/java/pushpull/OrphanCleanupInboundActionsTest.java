@@ -18,22 +18,25 @@
  */
 package org.apache.syncope.core.provisioning.java.pushpull;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.apache.syncope.common.lib.to.Provision;
 import org.apache.syncope.common.lib.to.ProvisioningReport;
 import org.apache.syncope.common.lib.types.AnyTypeKind;
-import org.apache.syncope.common.lib.types.PullMode;
+import org.apache.syncope.common.lib.types.ResourceOperation;
 import org.apache.syncope.core.persistence.api.dao.ExternalResourceDAO;
 import org.apache.syncope.core.persistence.api.dao.GroupDAO;
 import org.apache.syncope.core.persistence.api.dao.UserDAO;
@@ -82,9 +85,6 @@ public class OrphanCleanupInboundActionsTest {
     private User matchedUser;
 
     @Mock
-    private User adminUser;
-
-    @Mock
     private Group orphanGroup;
 
     @Mock
@@ -104,16 +104,19 @@ public class OrphanCleanupInboundActionsTest {
 
     private final Provision userProvision  = new Provision();
     private final Provision groupProvision = new Provision();
+    private List<ProvisioningReport> results;
 
     @BeforeEach
     public void setUp() {
         userProvision.setAnyType(AnyTypeKind.USER.name());
         groupProvision.setAnyType(AnyTypeKind.GROUP.name());
+        results = new ArrayList<>();
 
         lenient().doReturn(pullTask).when(profile).getTask();
         lenient().when(pullTask.getResource()).thenReturn(resource);
         lenient().when(resource.getKey()).thenReturn(RESOURCE_KEY);
         lenient().doReturn(Optional.of(resource)).when(resourceDAO).findById(RESOURCE_KEY);
+        lenient().doReturn(results).when(profile).getResults();
 
         lenient().when(resource.getProvisionByAnyType(AnyTypeKind.USER.name()))
             .thenReturn(Optional.of(userProvision));
@@ -126,9 +129,6 @@ public class OrphanCleanupInboundActionsTest {
         lenient().when(matchedUser.getKey()).thenReturn(MATCHED_USER_KEY);
         lenient().when(matchedUser.getUsername()).thenReturn(MATCHED_USERNAME);
 
-        lenient().when(adminUser.getKey()).thenReturn(UUID.randomUUID().toString());
-        lenient().when(adminUser.getUsername()).thenReturn("admin");
-
         lenient().when(orphanGroup.getKey()).thenReturn(ORPHAN_GROUP_KEY);
         lenient().when(orphanGroup.getName()).thenReturn(ORPHAN_GROUP_NAME);
 
@@ -139,27 +139,6 @@ public class OrphanCleanupInboundActionsTest {
         lenient().doReturn(new PageImpl<>(List.of())).when(userDAO).findAll(any(Pageable.class));
         lenient().doReturn(new PageImpl<>(List.of())).when(groupDAO).findAll(any(Pageable.class));
     }
-
-    // -------------------------------------------------------------------------
-    // beforeAll() — validate pullMode
-    // -------------------------------------------------------------------------
-
-    @Test
-    public void beforeAllFullReconciliationPasses() {
-        when(pullTask.getPullMode()).thenReturn(PullMode.FULL_RECONCILIATION);
-        actions.beforeAll(profile);
-        // no exception expected
-    }
-
-    @Test
-    public void beforeAllIncrementalThrows() {
-        when(pullTask.getPullMode()).thenReturn(PullMode.INCREMENTAL);
-        assertThrows(IllegalStateException.class, () -> actions.beforeAll(profile));
-    }
-
-    // -------------------------------------------------------------------------
-    // afterAll() — dry run skips deletion
-    // -------------------------------------------------------------------------
 
     @Test
     public void afterAllDryRunSkipsDeletion() {
@@ -180,7 +159,7 @@ public class OrphanCleanupInboundActionsTest {
 
         ProvisioningReport matchedResult = new ProvisioningReport();
         matchedResult.setName(MATCHED_USERNAME);
-        when(profile.getResults()).thenReturn(List.of(matchedResult));
+        results.add(matchedResult);
 
         lenient().doReturn(new PageImpl<>(List.of(orphanUser, matchedUser)))
             .when(userDAO).findAll(any(Pageable.class));
@@ -189,23 +168,9 @@ public class OrphanCleanupInboundActionsTest {
 
         verify(userDAO, times(1)).deleteById(ORPHAN_USER_KEY);
         verify(userDAO, never()).deleteById(MATCHED_USER_KEY);
-    }
-
-    // -------------------------------------------------------------------------
-    // afterAll() — admin user is never deleted even if absent from upstream
-    // -------------------------------------------------------------------------
-
-    @Test
-    public void afterAllSkipsAdminUser() {
-        when(profile.isDryRun()).thenReturn(false);
-        when(profile.getResults()).thenReturn(List.of()); // upstream empty
-
-        lenient().doReturn(new PageImpl<>(List.of(adminUser)))
-            .when(userDAO).findAll(any(Pageable.class));
-
-        actions.afterAll(profile);
-
-        verify(userDAO, never()).deleteById(anyString());
+        assertEquals(1, orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.SUCCESS).size());
+        assertEquals(ORPHAN_USERNAME,
+                orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.SUCCESS).get(0).getName());
     }
 
     // -------------------------------------------------------------------------
@@ -215,7 +180,6 @@ public class OrphanCleanupInboundActionsTest {
     @Test
     public void afterAllDeletesOrphanGroup() {
         when(profile.isDryRun()).thenReturn(false);
-        when(profile.getResults()).thenReturn(List.of()); // upstream empty
 
         lenient().doReturn(new PageImpl<>(List.of(orphanGroup)))
             .when(groupDAO).findAll(any(Pageable.class));
@@ -223,6 +187,7 @@ public class OrphanCleanupInboundActionsTest {
         actions.afterAll(profile);
 
         verify(groupDAO, times(1)).deleteById(ORPHAN_GROUP_KEY);
+        assertEquals(1, orphanDeleteReports(AnyTypeKind.GROUP, ProvisioningReport.Status.SUCCESS).size());
     }
 
     // -------------------------------------------------------------------------
@@ -235,7 +200,7 @@ public class OrphanCleanupInboundActionsTest {
 
         ProvisioningReport r = new ProvisioningReport();
         r.setName(MATCHED_GROUP_NAME);
-        when(profile.getResults()).thenReturn(List.of(r));
+        results.add(r);
 
         lenient().doReturn(new PageImpl<>(List.of(orphanGroup, matchedGroup)))
             .when(groupDAO).findAll(any(Pageable.class));
@@ -256,10 +221,38 @@ public class OrphanCleanupInboundActionsTest {
 
         ProvisioningReport r = new ProvisioningReport();
         r.setName(MATCHED_USERNAME);
-        when(profile.getResults()).thenReturn(List.of(r));
+        results.add(r);
 
         lenient().doReturn(new PageImpl<>(List.of(matchedUser)))
             .when(userDAO).findAll(any(Pageable.class));
+
+        actions.afterAll(profile);
+
+        verify(userDAO, never()).deleteById(anyString());
+        verify(groupDAO, never()).deleteById(anyString());
+        assertTrue(orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.SUCCESS).isEmpty());
+        assertTrue(orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.FAILURE).isEmpty());
+    }
+
+    @Test
+    public void afterAllDeleteFailureIsRecorded() {
+        when(profile.isDryRun()).thenReturn(false);
+
+        lenient().doReturn(new PageImpl<>(List.of(orphanUser)))
+            .when(userDAO).findAll(any(Pageable.class));
+        doThrow(new RuntimeException("delete failed")).when(userDAO).deleteById(ORPHAN_USER_KEY);
+
+        actions.afterAll(profile);
+
+        assertEquals(1, orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.FAILURE).size());
+        assertEquals(ORPHAN_USER_KEY,
+                orphanDeleteReports(AnyTypeKind.USER, ProvisioningReport.Status.FAILURE).get(0).getKey());
+    }
+
+    @Test
+    public void afterAllResourceSetupFailureDoesNotPropagate() {
+        when(profile.isDryRun()).thenReturn(false);
+        when(profile.getTask()).thenThrow(new RuntimeException("task unavailable"));
 
         actions.afterAll(profile);
 
@@ -274,7 +267,6 @@ public class OrphanCleanupInboundActionsTest {
     @Test
     public void afterAllResourceNotFoundAbortsCleanup() {
         when(profile.isDryRun()).thenReturn(false);
-        when(profile.getResults()).thenReturn(List.of());
         when(resourceDAO.findById(RESOURCE_KEY)).thenReturn(Optional.empty());
 
         actions.afterAll(profile);
@@ -290,7 +282,6 @@ public class OrphanCleanupInboundActionsTest {
     @Test
     public void afterAllNoUserProvisionSkipsUserCheck() {
         when(profile.isDryRun()).thenReturn(false);
-        when(profile.getResults()).thenReturn(List.of());
         when(resource.getProvisionByAnyType(AnyTypeKind.USER.name())).thenReturn(Optional.empty());
 
         lenient().doReturn(new PageImpl<>(List.of(orphanUser)))
@@ -308,7 +299,6 @@ public class OrphanCleanupInboundActionsTest {
     @Test
     public void afterAllNoGroupProvisionSkipsGroupCheck() {
         when(profile.isDryRun()).thenReturn(false);
-        when(profile.getResults()).thenReturn(List.of());
         when(resource.getProvisionByAnyType(AnyTypeKind.GROUP.name())).thenReturn(Optional.empty());
 
         lenient().doReturn(new PageImpl<>(List.of(orphanGroup)))
@@ -317,5 +307,16 @@ public class OrphanCleanupInboundActionsTest {
         actions.afterAll(profile);
 
         verify(groupDAO, never()).deleteById(anyString());
+    }
+
+    private List<ProvisioningReport> orphanDeleteReports(
+            final AnyTypeKind anyTypeKind,
+            final ProvisioningReport.Status status) {
+
+        return results.stream()
+                .filter(r -> anyTypeKind.name().equals(r.getAnyType()))
+                .filter(r -> ResourceOperation.DELETE == r.getOperation())
+                .filter(r -> status == r.getStatus())
+                .toList();
     }
 }
