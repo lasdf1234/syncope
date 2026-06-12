@@ -339,6 +339,15 @@ under the License.
         </includes>
         <filtering>false</filtering>
       </resource>
+
+      <resource>
+        <directory>${basedir}/../../fit/core-reference/src/test/resources/gravitino</directory>
+        <targetPath>gravitino</targetPath>
+        <includes>
+          <include>*.groovy</include>
+        </includes>
+        <filtering>false</filtering>
+      </resource>
     </resources>
   </build>
 

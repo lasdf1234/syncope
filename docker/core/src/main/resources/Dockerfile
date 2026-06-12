@@ -20,9 +20,11 @@ LABEL org.opencontainers.image.authors="dev@syncope.apache.org"
 
 RUN apk update && apk add bash
 
-RUN mkdir /opt/syncope /opt/syncope/bin /opt/syncope/bundles /opt/syncope/conf /opt/syncope/lib /opt/syncope/log
+RUN mkdir /opt/syncope /opt/syncope/bin /opt/syncope/bundles /opt/syncope/conf /opt/syncope/conf/gravitino /opt/syncope/lib /opt/syncope/log
 
 COPY *.properties *.xml saml.keystore.jks /opt/syncope/conf/
+
+COPY gravitino/*.groovy /opt/syncope/conf/gravitino/
 
 COPY bundles/*.jar /opt/syncope/bundles/
 
