@@ -1039,6 +1039,9 @@ public class AzureConnector implements
                 }
             }
 
+            attrs.add(AzureAttributes.doBuildAttributeFromClassField(
+                    user.getMailNickname(), AzureAttributes.USER_MAIL_NICKNAME, String.class).build());
+
             for (Attribute toAttribute : attrs) {
                 String attributeName = toAttribute.getName();
                 for (String attributeToGetName : attributesToGet) {
