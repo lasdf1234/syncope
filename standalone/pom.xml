@@ -161,7 +161,7 @@ under the License.
                 </copy>
                 <copy todir="${work.dir}/apache-tomcat-${tomcat.version}/webapps/syncope-enduser/WEB-INF/classes" overwrite="true">
                   <fileset dir="${project.build.outputDirectory}/enduser"/>
-                </copy>f
+                </copy>
 
                 <!-- Syncope wa -->
                 <copy todir="${work.dir}/apache-tomcat-${tomcat.version}/webapps/syncope-wa">
@@ -194,7 +194,9 @@ under the License.
                 <copy file="${project.build.outputDirectory}/setenv.sh" todir="${work.dir}/apache-tomcat-${tomcat.version}/bin"/>
                 <copy file="${project.build.outputDirectory}/setenv.bat" todir="${work.dir}/apache-tomcat-${tomcat.version}/bin"/>
                 <copy file="${project.build.outputDirectory}/import-azure-truststore.sh" todir="${work.dir}/apache-tomcat-${tomcat.version}/bin"/>
-                <chmod file="${work.dir}/apache-tomcat-${tomcat.version}/bin/import-azure-truststore.sh" perm="ugo+rx"/>
+                <chmod perm="ugo+rx" type="file">
+                  <fileset dir="${work.dir}/apache-tomcat-${tomcat.version}/bin" includes="*.sh"/>
+                </chmod>
                 <replace file="${work.dir}/apache-tomcat-${tomcat.version}/conf/server.xml" token="8080" value="${cargo.servlet.port}"/>
                 <replace file="${work.dir}/apache-tomcat-${tomcat.version}/conf/server.xml" token="8443" value="9443"/>
                 <replace file="${work.dir}/apache-tomcat-${tomcat.version}/conf/server.xml">

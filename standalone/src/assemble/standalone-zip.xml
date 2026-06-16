@@ -31,6 +31,20 @@ under the License.
     <fileSet>
       <directory>${work.dir}</directory>
       <outputDirectory>${project.build.finalName}</outputDirectory>
+      <directoryMode>0755</directoryMode>
+      <fileMode>0644</fileMode>
+      <excludes>
+        <exclude>**/*.sh</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${work.dir}</directory>
+      <outputDirectory>${project.build.finalName}</outputDirectory>
+      <directoryMode>0755</directoryMode>
+      <fileMode>0755</fileMode>
+      <includes>
+        <include>**/*.sh</include>
+      </includes>
     </fileSet>
   </fileSets>
 </assembly>
