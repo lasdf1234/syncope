@@ -55,6 +55,10 @@ under the License.
              cronExpression="0 0/5 * * * ?"/>
   <SchedTask_Implementation type="SCHED_TASK_JOB_DELEGATE" left="8ea0ea51-ce08-4fe3-a0c8-c281b31b5893" right="ExpiredBatchCleanup"/>
 
+  <!-- Azure Pull orphan cleanup (built-in JAVA InboundActions) -->
+  <Implementation id="OrphanCleanupInboundActions" type="INBOUND_ACTIONS" engine="JAVA"
+                  body="org.apache.syncope.core.provisioning.java.pushpull.OrphanCleanupInboundActions"/>
+
   <!-- Password reset notifications -->
   <MailTemplate id="requestPasswordReset"
                 textTemplate="Hi,
