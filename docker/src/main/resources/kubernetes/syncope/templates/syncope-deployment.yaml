@@ -26,71 +26,30 @@ data:
  DB_POOL_MAX: "{{.Values.syncopeEnvironment.dbPoolMax}}"
  DB_POOL_MIN: "{{.Values.syncopeEnvironment.dbPoolMin}}"
  OPENJPA_REMOTE_COMMIT: sjvm
- ANONYMOUS_USER: {{ .Values.syncopeEnvironment.anonymousUser | default "anonymous" | quote }}
- ANONYMOUS_KEY: {{ .Values.syncopeEnvironment.anonymousKey | default "anonymousKey" | quote }}
- KEYMASTER_USERNAME: {{ .Values.syncopeEnvironment.keymasterUsername | default "anonymous" | quote }}
- KEYMASTER_PASSWORD: {{ .Values.syncopeEnvironment.keymasterPassword | default "anonymousKey" | quote }}
 ---
-apiVersion: apps/v1
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: {{.Values.syncopeConfig.name}}
 spec:
-  replicas: {{ .Values.syncopeConfig.replicas }}
-  selector:
-    matchLabels:
-      name: {{.Values.syncopeConfig.name}}
+  replicas: 1
+  strategy: {}
   template:
     metadata:
       labels:
         name: {{.Values.syncopeConfig.name}}
     spec:
-      {{- with .Values.hostAliases }}
-      hostAliases:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       containers:
       - name: {{.Values.syncopeConfig.name}}
         envFrom:
         - configMapRef:
            name: syncope-environment-config
-        env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: docker,postgresql
-        - name: SERVER_FORWARD_HEADERS_STRATEGY
-          value: framework
-        - name: KEYMASTER_ADDRESS
-          value: http://localhost:8080/syncope/rest/keymaster
-        - name: SERVICE_DISCOVERY_ADDRESS
-          value: http://{{ .Values.syncopeConfig.name }}:8080/syncope/rest/
-        {{- if .Values.syncopeEnvironment.mailHost }}
-        - name: SPRING_MAIL_HOST
-          value: {{ .Values.syncopeEnvironment.mailHost | quote }}
-        - name: SPRING_MAIL_PORT
-          value: {{ .Values.syncopeEnvironment.mailPort | default "25" | quote }}
-        - name: SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH
-          value: {{ .Values.syncopeEnvironment.mailSmtpAuth | default "false" | quote }}
-        - name: SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE
-          value: {{ .Values.syncopeEnvironment.mailSmtpStarttlsEnable | default "false" | quote }}
-        {{- with .Values.syncopeEnvironment.mailUsername }}
-        - name: SPRING_MAIL_USERNAME
-          value: {{ . | quote }}
-        {{- end }}
-        {{- with .Values.syncopeEnvironment.mailPassword }}
-        - name: SPRING_MAIL_PASSWORD
-          value: {{ . | quote }}
-        {{- end }}
-        {{- end }}
         image: "{{.Values.syncopeConfig.repository}}/{{.Values.syncopeConfig.container}}:{{.Values.syncopeConfig.tag}}"
-        imagePullPolicy: {{ .Values.syncopeConfig.imagePullPolicy | default "IfNotPresent" }}
         ports:
         - containerPort: {{.Values.syncopeConfig.containerPort}}
-        resources:
-          requests:
-            memory: {{ .Values.syncopeConfig.memoryLimit }}
-          limits:
-            memory: {{ .Values.syncopeConfig.memoryLimit }}
+        resources: {}
       restartPolicy: Always
+status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -102,5 +61,4 @@ spec:
     name: "{{.Values.syncopeConfig.name}}"
   ports:
   - port: {{.Values.syncopeConfig.containerPort}}
-    targetPort: {{.Values.syncopeConfig.containerPort}}
     name: http-api
