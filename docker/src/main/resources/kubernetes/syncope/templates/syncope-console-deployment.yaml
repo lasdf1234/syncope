@@ -14,13 +14,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{.Values.syncopeConsoleConfig.name}}
 spec:
-  replicas: 1
-  strategy: {}
+  replicas: {{ .Values.syncopeConsoleConfig.replicas }}
+  selector:
+    matchLabels:
+      name: {{.Values.syncopeConsoleConfig.name}}
   template:
     metadata:
       labels:
@@ -31,12 +33,29 @@ spec:
         envFrom:
         - configMapRef:
            name: syncope-environment-config
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: docker
+        - name: SERVER_FORWARD_HEADERS_STRATEGY
+          value: framework
+        - name: CONSOLE_X_FORWARD_HTTP_PORT
+          value: {{ dig "consoleLocalPort" 28080 .Values.ingress | toString | quote }}
+        - name: JAVA_TOOL_OPTIONS
+          value: "-Dconsole.xForwardHttpPort={{ dig "consoleLocalPort" 28080 .Values.ingress }}"
+        - name: KEYMASTER_ADDRESS
+          value: http://{{ .Values.syncopeConfig.name }}:8080/syncope/rest/keymaster
+        - name: SERVICE_DISCOVERY_ADDRESS
+          value: http://{{ .Values.syncopeConsoleConfig.name }}:8080/syncope-console/
         image: "{{.Values.syncopeConsoleConfig.repository}}/{{.Values.syncopeConsoleConfig.container}}:{{.Values.syncopeConsoleConfig.tag}}"
+        imagePullPolicy: {{ .Values.syncopeConsoleConfig.imagePullPolicy | default "IfNotPresent" }}
         ports:
         - containerPort: {{.Values.syncopeConsoleConfig.containerPort}}
-        resources: {}
+        resources:
+          requests:
+            memory: {{ .Values.syncopeConsoleConfig.memoryLimit }}
+          limits:
+            memory: {{ .Values.syncopeConsoleConfig.memoryLimit }}
       restartPolicy: Always
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -48,4 +67,5 @@ spec:
     name: "{{.Values.syncopeConsoleConfig.name}}"
   ports:
   - port: {{.Values.syncopeConsoleConfig.containerPort}}
+    targetPort: {{.Values.syncopeConsoleConfig.containerPort}}
     name: http-api

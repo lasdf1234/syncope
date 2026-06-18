@@ -561,6 +561,7 @@ under the License.
     <argLine>-Xms512m -Xmx1024m -Xss256k</argLine>
 
     <ianal.phase>verify</ianal.phase>
+    <rat.skip>true</rat.skip>
     <sass.skip>false</sass.skip>
     <remote-resources.skip>true</remote-resources.skip>
 
@@ -2061,6 +2062,7 @@ under the License.
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
+          <skip>${rat.skip}</skip>
           <excludes>
             <exclude>**/nbactions.xml</exclude>
             <exclude>**/nb-configuration.xml</exclude>

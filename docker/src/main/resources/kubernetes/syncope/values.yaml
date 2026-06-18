@@ -24,6 +24,10 @@ syncopeEnvironment:
   coreHost: syncope # Host that syncope will use to connect to core.  Needs to match .Values.syncopeConfig.name
   corePort: 8080
   userCreds: <YOURPASSWORD> # Needs to match the databaseEnvironment.pgPassword that was provided to the database
+### Local ports for Console / Enduser xForwardHttpPort (match port-forward below)
+ingress:
+  consoleLocalPort: 28080
+  enduserLocalPort: 38080
 ### Config Params for the syncope container (A.K.A. Core)
 syncopeConfig:
   name: syncope

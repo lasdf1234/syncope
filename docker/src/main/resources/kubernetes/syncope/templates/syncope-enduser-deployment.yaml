@@ -14,13 +14,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{.Values.syncopeEndUserConfig.name}}
 spec:
-  replicas: 1
-  strategy: {}
+  replicas: {{ .Values.syncopeEndUserConfig.replicas }}
+  selector:
+    matchLabels:
+      name: {{.Values.syncopeEndUserConfig.name}}
   template:
     metadata:
       labels:
@@ -31,12 +33,29 @@ spec:
         envFrom:
         - configMapRef:
            name: syncope-environment-config
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: docker
+        - name: SERVER_FORWARD_HEADERS_STRATEGY
+          value: framework
+        - name: ENDUSER_X_FORWARD_HTTP_PORT
+          value: {{ dig "enduserLocalPort" 38080 .Values.ingress | toString | quote }}
+        - name: JAVA_TOOL_OPTIONS
+          value: "-Denduser.xForwardHttpPort={{ dig "enduserLocalPort" 38080 .Values.ingress }}"
+        - name: KEYMASTER_ADDRESS
+          value: http://{{ .Values.syncopeConfig.name }}:8080/syncope/rest/keymaster
+        - name: SERVICE_DISCOVERY_ADDRESS
+          value: http://{{ .Values.syncopeEndUserConfig.name }}:8080/syncope-enduser/
         image: "{{.Values.syncopeEndUserConfig.repository}}/{{.Values.syncopeEndUserConfig.container}}:{{.Values.syncopeEndUserConfig.tag}}"
+        imagePullPolicy: {{ .Values.syncopeEndUserConfig.imagePullPolicy | default "IfNotPresent" }}
         ports:
         - containerPort: {{.Values.syncopeEndUserConfig.containerPort}}
-        resources: {}
+        resources:
+          requests:
+            memory: {{ .Values.syncopeEndUserConfig.memoryLimit }}
+          limits:
+            memory: {{ .Values.syncopeEndUserConfig.memoryLimit }}
       restartPolicy: Always
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -48,4 +67,5 @@ spec:
     name: "{{.Values.syncopeEndUserConfig.name}}"
   ports:
   - port: {{.Values.syncopeEndUserConfig.containerPort}}
+    targetPort: {{.Values.syncopeEndUserConfig.containerPort}}
     name: http-api

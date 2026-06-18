@@ -15,22 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 apiVersion: v1
-kind: ConfigMap
-metadata:
- name: postgres-environment-config
-data:
- PG_DATABASE: "{{.Values.databaseEnvironment.pgDatabase}}"
- PG_MODE: "{{.Values.databaseEnvironment.pgMode}}"
- PG_PASSWORD: "{{.Values.databaseEnvironment.pgPassword}}"
- PG_PRIMARY_HOST: "{{.Values.databaseEnvironment.pgPrimaryHost}}"
- PG_PRIMARY_PASSWORD: "{{.Values.databaseEnvironment.pgPrimaryPassword}}"
- PG_PRIMARY_PORT: "{{.Values.databaseEnvironment.pgPrimaryPort}}"
- PG_PRIMARY_USER: "{{.Values.databaseEnvironment.pgPrimaryUser}}"
- PG_ROOT_PASSWORD: "{{.Values.databaseEnvironment.pgRootPassword}}"
- PG_USER: "{{.Values.databaseEnvironment.pgUser}}"
- PGDATA_PATH_OVERRIDE: "{{.Values.databaseEnvironment.pgdataPathOverride}}"
----
-apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{.Values.pv.name}}
@@ -43,9 +27,6 @@ spec:
   hostPath:
     path: "{{.Values.pv.path}}"
   persistentVolumeReclaimPolicy: Retain
-#  gcePersistentDisk:
-#    pdName: postgres-data
-#    fsType: ext4
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -58,7 +39,7 @@ spec:
     requests:
       storage: {{.Values.pv.storage}}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: "{{.Values.databaseConfig.name}}"
@@ -67,43 +48,55 @@ metadata:
     heritage: {{.Release.Service | quote }}
     release: {{.Release.Name | quote }}
     chart: "{{.Chart.Name}}-{{.Chart.Version}}"
-  annotations:
-    "helm.sh/created": {{.Release.Time.Seconds | quote }}
 spec:
   replicas: 1
-  strategy: {}
+  selector:
+    matchLabels:
+      name: "{{.Values.databaseConfig.name}}"
   template:
     metadata:
-      creationTimestamp: null
       labels:
         name: "{{.Values.databaseConfig.name}}"
     spec:
       securityContext:
-        fsGroup: 1000
+        fsGroup: 999
       containers:
       - image: "{{.Values.databaseConfig.repository}}/{{.Values.databaseConfig.container}}:{{.Values.databaseConfig.tag}}"
         name: {{.Values.databaseConfig.name}}
-#TODO: Need to impliment the readiness probe
-#        readinessProbe:
-#          exec:
-#            command:
-#            - "/opt/cpm/bin/readiness.sh"
-#          initialDelaySeconds: 10
-#          timeoutSeconds: 1
-#        livenessProbe:
-#          exec:
-#            command:
-#            - "/opt/cpm/bin/liveness.sh"
-#          initialDelaySeconds: 120
-#          timeoutSeconds: 1
-        envFrom:
-        - configMapRef:
-           name: postgres-environment-config
+        env:
+        - name: POSTGRES_DB
+          value: "{{.Values.databaseEnvironment.pgDatabase}}"
+        - name: POSTGRES_USER
+          value: "{{.Values.databaseEnvironment.pgUser}}"
+        - name: POSTGRES_PASSWORD
+          value: "{{.Values.databaseEnvironment.pgPassword}}"
+        - name: PGDATA
+          value: "{{.Values.pv.path}}/pgdata"
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - "{{.Values.databaseEnvironment.pgUser}}"
+            - -d
+            - "{{.Values.databaseEnvironment.pgDatabase}}"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - "{{.Values.databaseEnvironment.pgUser}}"
+            - -d
+            - "{{.Values.databaseEnvironment.pgDatabase}}"
+          initialDelaySeconds: 30
+          periodSeconds: 10
         volumeMounts:
           - mountPath: {{.Values.pv.path}}
             name: {{.Values.pv.name}}
         ports:
-          - containerPort: {{.Values.databaseConfig.port}}
+          - containerPort: {{.Values.databaseConfig.port }}
             protocol: TCP
         resources:
           requests:
@@ -115,7 +108,6 @@ spec:
             claimName: {{.Values.pvc.name}}
             readOnly: false
       restartPolicy: Always
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -127,15 +119,11 @@ metadata:
     release: {{ .Release.Name | quote }}
     chart: "{{.Chart.Name}}-{{.Chart.Version}}"
 spec:
-  type: "{{.Values.serviceType}}"
+  type: "{{.Values.databaseConfig.serviceType}}"
   ports:
   - protocol: TCP
     port: {{.Values.databaseConfig.port}}
     targetPort: {{.Values.databaseConfig.port}}
-    nodePort: 0
     name: "{{.Values.databaseConfig.name}}"
   selector:
     name: "{{.Values.databaseConfig.name}}"
-  sessionAffinity: None
-status:
-  loadBalancer: {}

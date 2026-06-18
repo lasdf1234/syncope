@@ -18,41 +18,10 @@
 # Full deployment (Core, Console, Enduser) with database on the host (not in Docker).
 # Same stack as docker-compose-postgresql.yml but without the db service.
 #
-# All database settings come from .env (see .env.host-db.example). No defaults in this file.
+# Set variables in the shell before `docker compose up` (see docs/build/build-and-deploy.md,
+# Docker — Compose). Compose substitutes ${…} from the environment; this file defines no defaults.
 #
-# DB_PROFILE — Spring profile, must be one of:
-#   postgresql | mysql | mariadb | oracle
-#
-# Example .env blocks (host = host.docker.internal):
-#
-#   postgresql
-#     DB_PROFILE=postgresql
-#     DB_URL=jdbc:postgresql://host.docker.internal:5432/syncope?stringtype=unspecified
-#     DB_USER=syncope
-#     DB_PASSWORD=syncope
-#     DB_SCHEMA=
-#
-#   mysql
-#     DB_PROFILE=mysql
-#     DB_URL=jdbc:mysql://host.docker.internal:3306/syncope?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
-#     DB_USER=syncope
-#     DB_PASSWORD=syncope
-#     DB_SCHEMA=
-#
-#   mariadb
-#     DB_PROFILE=mariadb
-#     DB_URL=jdbc:mariadb://host.docker.internal:3306/syncope?characterEncoding=UTF-8&relaxAutoCommit=true&useSSL=false
-#     DB_USER=syncope
-#     DB_PASSWORD=syncope
-#     DB_SCHEMA=
-#
-#   oracle
-#     DB_PROFILE=oracle
-#     DB_URL=jdbc:oracle:thin:@host.docker.internal:1521/FREEPDB1
-#     DB_USER=syncope
-#     DB_PASSWORD=syncope
-#     DB_SCHEMA=SYNCOPE
-#
+# DB_PROFILE — Spring profile: postgresql | mysql | mariadb | oracle
 # Containers reach the host via host.docker.internal (macOS / Windows / Linux with extra_hosts).
 
 services:
@@ -78,6 +47,12 @@ services:
        SERVICE_DISCOVERY_ADDRESS: http://syncope:8080/syncope/rest/
        ANONYMOUS_USER: ${ANONYMOUS_USER}
        ANONYMOUS_KEY: ${ANONYMOUS_KEY}
+       SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-none.syncope.apache.org}
+       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-25}
+       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+       SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:-false}
+       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:-false}
 
    syncope-console:
      depends_on:
